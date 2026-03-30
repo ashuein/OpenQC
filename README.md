@@ -1,5 +1,11 @@
 # OpenQC
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D.svg?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![SQLite](https://img.shields.io/badge/SQLite-003B57.svg?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+
 An open-source alternative to Westgard Green Belt + Black Belt for PCR diagnostic laboratories -- Levey-Jennings charting, full Westgard rule implementation, Six Sigma analysis, assay validation reporting, cryptographic audit logging for CDSCO/CE-IVD compliance, and a built-in regulatory assistant trained on CDSCO and ICMR guidelines. Free, local, no subscription.
 
 ## Features
