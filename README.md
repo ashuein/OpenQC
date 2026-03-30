@@ -25,85 +25,120 @@ An open-source alternative to Westgard Green Belt + Black Belt for PCR diagnosti
 ## Architecture
 
 ```text
-                             +------------ Design Workflow ------------+
-                             | Figma screen spec --> UI implementation  |
-                             +--------------------+---------------------+
-                                                  |
-+---------------------------- Frontend (Vue 3 + Vite) ----------------------------+
-| App Shell | Views | shadcn-vue Primitives | Stores | API Clients | Charts      |
-+-------------------------------+-------------------------------------------------+
-                                | HTTP/JSON
-+-------------------------------v-------------------------------------------------+
-| FastAPI Routers                                                                  |
-| qc | sigma | validation | audit | lots | rag                                    |
-+---------------+---------------------+---------------------+---------------------+
-                |                     |                     |
-        +-------v-------+    +-------v--------+    +-------v-------+
-        | Engines        |    | Parsers        |    | Report Engine |
-        | westgard       |    | instrument xlsx|    | PDF rendering |
-        | sigma          |    | generic xlsx   |    +---------------+
-        | validation     |    | regulatory pdf |
-        | audit          |    +-------+--------+
-        | rag            |            |
-        +-------+--------+    +------v---------+
-                |              | Regulatory Docs |
-                |              | local PDF corpus|
-                |              +----------------+
-      +---------v---------+
-      | Repositories / DB |
-      | SQLite            |
-      | ChromaDB          |
-      +-------------------+
+                             ┌──────────── Design Workflow ────────────┐
+                             │ Figma screen spec ──▶ UI implementation │
+                             └──────────────────────┬──────────────────┘
+                                                    │
+┌──────────────────────────── Frontend (Vue 3 + Vite) ────────────────────────────┐
+│ App Shell │ Views │ shadcn-vue Primitives │ Stores │ API Clients │ Charts       │
+└───────────────────────────────┬─────────────────────────────────────────────────┘
+                                │ HTTP/JSON
+┌───────────────────────────────▼─────────────────────────────────────────────────┐
+│ FastAPI Routers                                                                 │
+│ qc │ sigma │ validation │ audit │ lots │ rag                                    │
+└───────────────┬───────────────────────┬───────────────────────┬─────────────────┘
+                │                       │                       │
+        ┌───────▼───────┐      ┌────────▼────────┐      ┌──────▼────────┐
+        │ Engines        │      │ Parsers          │      │ Report Engine │
+        │ westgard       │      │ instrument .xlsx │      │ PDF rendering │
+        │ sigma          │      │ generic .xlsx    │      └───────────────┘
+        │ validation     │      │ regulatory .pdf  │
+        │ audit          │      └────────┬─────────┘
+        │ rag            │               │
+        └───────┬────────┘       ┌───────▼────────┐
+                │                │ Regulatory Docs │
+                │                │ local PDF corpus│
+                │                └────────────────┘
+        ┌───────▼───────────┐
+        │ Repositories / DB │
+        │ SQLite            │
+        │ ChromaDB          │
+        └───────────────────┘
 ```
 
-## Prerequisites
+## Getting Started
 
-- Python 3.12+
-- Node.js 18+
-- npm 9+
+### Prerequisites
 
-## Setup
+- **Python 3.12+** — [python.org/downloads](https://www.python.org/downloads/)
+- **Node.js 18+** and **npm 9+** — [nodejs.org](https://nodejs.org/)
+- **Git** — [git-scm.com](https://git-scm.com/)
 
-### Backend
+### 1. Clone the repository
 
 ```bash
-cd backend
-pip install -r requirements.txt
+git clone https://github.com/ashuein/OpenQC.git
+cd OpenQC
 ```
 
-### Frontend
+### 2. Install backend dependencies
+
+```bash
+pip install -r backend/requirements.txt
+```
+
+This installs the core stack (FastAPI, SQLAlchemy, Pydantic, openpyxl). Optional heavy dependencies for specific features can be added later — see the table below.
+
+### 3. Install frontend dependencies
 
 ```bash
 cd frontend
 npm install
+cd ..
 ```
 
-### Run Development Servers
+### 4. Start development servers
 
-**Backend** (from project root):
+Open two terminals from the project root:
+
+**Terminal 1 — Backend API:**
 ```bash
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn backend.main:app --reload --port 8000
 ```
 
-**Frontend** (from frontend/):
+The database (`backend/data/openqc.db`) is created automatically on first startup.
+
+**Terminal 2 — Frontend dev server:**
 ```bash
 cd frontend
 npm run dev
 ```
 
-The app will be available at http://localhost:5173 with the API at http://localhost:8000.
+### 5. Open the app
+
+- **Frontend UI:** http://localhost:5173
+- **Backend Swagger docs:** http://localhost:8000/docs
+- **Health check:** http://localhost:8000/
+
+### 6. Try it with sample data
+
+Sample Excel files are included in `backend/data/samples/`. Upload `sample_qc_violations.xlsx` through the QC Monitor to see Westgard violation detection in action.
+
+To regenerate sample files:
+```bash
+python backend/data/samples/generate_samples.py
+```
 
 ### Optional Dependencies
 
-The `requirements.txt` includes all packages, but several are only needed for specific features. If you want a minimal install, start with the core and add these as needed:
+The core app runs without these. Install as needed for specific features:
 
-| Feature | Package | Install |
-|---------|---------|---------|
-| PDF Reports | WeasyPrint | `pip install weasyprint` (requires system GTK libraries) |
-| RAG Ingestion | PyMuPDF, pdfplumber | `pip install PyMuPDF pdfplumber` |
-| RAG Embeddings | sentence-transformers | `pip install sentence-transformers` |
-| RAG Answers | Anthropic SDK | `pip install anthropic` (requires `ANTHROPIC_API_KEY` env var) |
-| Vector Store | ChromaDB | `pip install chromadb` |
+| Feature | Package | Install | Notes |
+|---------|---------|---------|-------|
+| PDF Reports | WeasyPrint | `pip install weasyprint` | Requires system GTK libraries ([setup guide](https://doc.courtbouillon.org/weasyprint/stable/first_steps.html)) |
+| RAG Ingestion | PyMuPDF, pdfplumber | `pip install PyMuPDF pdfplumber` | For parsing regulatory PDFs |
+| RAG Embeddings | sentence-transformers | `pip install sentence-transformers` | ~500 MB download, runs on CPU |
+| RAG Answers | Anthropic SDK | `pip install anthropic` | Set `ANTHROPIC_API_KEY` env var |
+| Vector Store | ChromaDB | `pip install chromadb` | Local persistent store |
+
+### RAG Setup (optional)
+
+To use the Regulatory Assistant:
+
+1. Place regulatory PDFs (CDSCO MD-15, ICMR guidelines, etc.) in `backend/data/regulatory_docs/`
+2. Install RAG dependencies: `pip install PyMuPDF pdfplumber chromadb sentence-transformers anthropic`
+3. Set your API key: `export ANTHROPIC_API_KEY=sk-ant-...`
+4. Start the backend and click **Ingest Documents** in the Regulatory Assistant view (one-time, 2-5 min on CPU)
 
 ## API Documentation
 
