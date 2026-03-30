@@ -159,10 +159,15 @@ def get_run_history(
     if before is not None:
         query = query.filter(QCRun.uploaded_at < before)
 
-    # Order oldest-first so callers get correct chronological sequence
-    # for consecutive Westgard rule evaluation.
-    return (
-        query.order_by(QCRun.uploaded_at.asc(), QCDataPoint.sequence_index.asc())
+    # We need the most recent `limit` points, but returned in
+    # chronological (oldest-first) order for consecutive rule evaluation.
+    # Step 1: Get the most recent points (DESC + LIMIT)
+    # Step 2: Sort them oldest-first in Python
+    recent = (
+        query.order_by(QCRun.uploaded_at.desc(), QCDataPoint.sequence_index.desc())
         .limit(limit)
         .all()
     )
+    # Reverse to chronological order: oldest run first, then by sequence_index
+    recent.sort(key=lambda dp: (dp.run.uploaded_at, dp.sequence_index))
+    return recent
