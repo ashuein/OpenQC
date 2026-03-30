@@ -33,7 +33,12 @@ try:
     def get_anthropic_client():
         global _anthropic_client
         if _anthropic_client is None:
-            _anthropic_client = anthropic.Anthropic()
+            # Try to get API key from DB settings first, then fall back to env var
+            api_key = _get_stored_api_key()
+            if api_key:
+                _anthropic_client = anthropic.Anthropic(api_key=api_key)
+            else:
+                _anthropic_client = anthropic.Anthropic()  # uses ANTHROPIC_API_KEY env var
         return _anthropic_client
 
 except ImportError:
@@ -42,6 +47,20 @@ except ImportError:
         raise ImportError(
             "anthropic SDK required. Install with: pip install anthropic"
         )
+
+
+def _get_stored_api_key() -> str | None:
+    """Retrieve the API key from the settings DB, if available."""
+    try:
+        from backend.db.database import SessionLocal
+        from backend.db.settings_repository import get_setting
+        db = SessionLocal()
+        try:
+            return get_setting(db, "anthropic_api_key")
+        finally:
+            db.close()
+    except Exception:
+        return None
 
 
 REGULATORY_DOCS_DIR = (

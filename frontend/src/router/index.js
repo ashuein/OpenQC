@@ -36,6 +36,11 @@ const routes = [
     name: 'regulatory-assistant',
     component: () => import('../views/RegulatoryAssistantView.vue'),
   },
+  {
+    path: '/settings',
+    name: 'settings',
+    component: () => import('../views/SettingsView.vue'),
+  },
 ]
 
 const router = createRouter({

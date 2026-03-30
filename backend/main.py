@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.db.database import init_db
-from backend.routers import audit, lots, qc, rag, sigma, validation
+from backend.routers import audit, lots, qc, rag, settings, sigma, validation
 
 
 @asynccontextmanager
@@ -48,6 +48,7 @@ app.include_router(validation.router)
 app.include_router(audit.router)
 app.include_router(lots.router)
 app.include_router(rag.router)
+app.include_router(settings.router)
 
 
 # ---------------------------------------------------------------------------

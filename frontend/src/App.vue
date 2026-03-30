@@ -9,6 +9,7 @@ import {
   Shield,
   Package,
   BookOpen,
+  Settings,
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -21,6 +22,10 @@ const navItems = [
   { to: '/audit', name: 'Audit Trail', icon: Shield },
   { to: '/lots', name: 'Lot Registry', icon: Package },
   { to: '/regulatory', name: 'Regulatory', icon: BookOpen },
+]
+
+const bottomNavItems = [
+  { to: '/settings', name: 'Settings', icon: Settings },
 ]
 
 function isActive(item) {
@@ -47,6 +52,20 @@ function isActive(item) {
           <span>{{ item.name }}</span>
         </router-link>
       </nav>
+      <div class="sidebar-bottom">
+        <nav class="sidebar-nav">
+          <router-link
+            v-for="item in bottomNavItems"
+            :key="item.to"
+            :to="item.to"
+            class="nav-link"
+            :class="{ 'nav-link--active': isActive(item) }"
+          >
+            <component :is="item.icon" :size="18" :stroke-width="1.75" />
+            <span>{{ item.name }}</span>
+          </router-link>
+        </nav>
+      </div>
     </aside>
     <main class="content">
       <router-view />
@@ -86,6 +105,13 @@ function isActive(item) {
   flex-direction: column;
   gap: 2px;
   padding: 0 8px;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding-top: 8px;
+  padding-bottom: 12px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .nav-link {
