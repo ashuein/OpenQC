@@ -30,8 +30,17 @@ const isLinearity = computed(() => selectedType.value === 'linearity')
 const linearityData = computed(() => {
   if (!hasResult.value || !isLinearity.value) return null
   const r = validation.result
-  if (r.linearity_levels && r.regression) {
-    return { levels: r.linearity_levels, regression: r.regression }
+  const raw = r.raw_summary || {}
+  // The validation engine returns linearity results in raw_summary
+  if (raw.levels && raw.slope !== undefined) {
+    return {
+      levels: raw.levels,
+      regression: {
+        slope: raw.slope,
+        intercept: raw.intercept,
+        r_squared: raw.r_squared,
+      },
+    }
   }
   return null
 })
@@ -50,9 +59,9 @@ async function handleFileSelected(file) {
 }
 
 async function handleRunValidation(criteria) {
-  if (!validation.dataset?.id) return
+  if (!validation.dataset?.dataset_id) return
   try {
-    await validation.validate(validation.dataset.id, criteria)
+    await validation.validate(validation.dataset.dataset_id, criteria)
   } catch {
     // error stored in validation.error
   }

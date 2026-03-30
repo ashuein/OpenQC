@@ -75,6 +75,8 @@ class QuantStudioParser(BaseParser):
         target_col = "Target Name" if "Target Name" in col_map else None
         sample_col = "Sample Name" if "Sample Name" in col_map else None
         well_col = "Well" if "Well" in col_map else None
+        ct_mean_col = "Ct Mean" if "Ct Mean" in col_map else "CT Mean" if "CT Mean" in col_map else None
+        ct_sd_col = "Ct SD" if "Ct SD" in col_map else "CT SD" if "CT SD" in col_map else None
 
         parsed_rows: list[dict] = []
         for row in rows_iter:
@@ -104,6 +106,26 @@ class QuantStudioParser(BaseParser):
                 wv = values[col_map[well_col]]
                 well = str(wv).strip() if wv is not None else ""
 
+            # Extract Ct Mean (optional)
+            mean_val = None
+            if ct_mean_col and ct_mean_col in col_map:
+                mean_raw = values[col_map[ct_mean_col]]
+                if mean_raw is not None and str(mean_raw).strip().lower() not in ("", "undetermined"):
+                    try:
+                        mean_val = float(mean_raw)
+                    except (ValueError, TypeError):
+                        mean_val = None
+
+            # Extract Ct SD (optional)
+            sd_val = None
+            if ct_sd_col and ct_sd_col in col_map:
+                sd_raw = values[col_map[ct_sd_col]]
+                if sd_raw is not None and str(sd_raw).strip().lower() not in ("", "undetermined"):
+                    try:
+                        sd_val = float(sd_raw)
+                    except (ValueError, TypeError):
+                        sd_val = None
+
             # Derive control level from sample name heuristics
             control_level = _derive_control_level(sample_name)
 
@@ -111,6 +133,8 @@ class QuantStudioParser(BaseParser):
                 {
                     "control_level": control_level,
                     "ct_value": ct_value,
+                    "mean": mean_val,
+                    "sd": sd_val,
                     "target": target,
                     "well": well,
                 }

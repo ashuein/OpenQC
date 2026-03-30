@@ -94,9 +94,9 @@ def evaluate_rules(points: list[dict], assay_config: dict) -> dict:
     reject_rules: list[str] = []
     first_reject_rule: str | None = None
 
-    # Accumulator for z-scores across the full sequence (for 2-2s, 4-1s, 10x)
-    z_history: list[float] = []
-    # z-scores within the current run only (for R-4s)
+    # Per-control-level z-score histories (for 2-2s, 4-1s, 10x)
+    z_histories: dict[str, list[float]] = {}
+    # z-scores within the current run across all levels (for R-4s)
     z_in_run: list[float] = []
 
     for pt in points:
@@ -105,10 +105,16 @@ def evaluate_rules(points: list[dict], assay_config: dict) -> dict:
         sigma = pt["sd"]
         level = pt["control_level"]
         idx = pt["sequence_index"]
+        is_history = pt.get("_is_history", False)
 
         z = _compute_z(ct, mu, sigma)
-        z_history.append(z)
+
+        if level not in z_histories:
+            z_histories[level] = []
+        z_histories[level].append(z)
         z_in_run.append(z)
+
+        level_history = z_histories[level]
 
         point_violations: list[str] = []
 
@@ -126,15 +132,15 @@ def evaluate_rules(points: list[dict], assay_config: dict) -> dict:
             if first_reject_rule is None:
                 first_reject_rule = "1-3s"
 
-        # 2-2s (reject) -- needs >= 2 historical points
-        if check_2_2s(z_history):
+        # 2-2s (reject) -- needs >= 2 points in the same control level
+        if check_2_2s(level_history):
             point_violations.append("2-2s")
             if "2-2s" not in reject_rules:
                 reject_rules.append("2-2s")
             if first_reject_rule is None:
                 first_reject_rule = "2-2s"
 
-        # R-4s (reject) -- only if enabled (multi-control assays)
+        # R-4s (reject) -- only if enabled (multi-control assays), across levels
         if r4s_enabled and check_r_4s(z_in_run):
             point_violations.append("R-4s")
             if "R-4s" not in reject_rules:
@@ -142,16 +148,16 @@ def evaluate_rules(points: list[dict], assay_config: dict) -> dict:
             if first_reject_rule is None:
                 first_reject_rule = "R-4s"
 
-        # 4-1s (reject)
-        if check_4_1s(z_history):
+        # 4-1s (reject) -- same control level
+        if check_4_1s(level_history):
             point_violations.append("4-1s")
             if "4-1s" not in reject_rules:
                 reject_rules.append("4-1s")
             if first_reject_rule is None:
                 first_reject_rule = "4-1s"
 
-        # 10x (reject)
-        if check_10x(z_history):
+        # 10x (reject) -- same control level
+        if check_10x(level_history):
             point_violations.append("10x")
             if "10x" not in reject_rules:
                 reject_rules.append("10x")
@@ -160,26 +166,28 @@ def evaluate_rules(points: list[dict], assay_config: dict) -> dict:
 
         # Record violations for this point
         if point_violations:
-            violations.append(
-                {
-                    "sequence_index": idx,
-                    "control_level": level,
-                    "z_score": z,
-                    "rules": point_violations,
-                }
-            )
-
-        evaluated_points.append(
-            {
-                "cycle": idx,
+            violation_entry: dict = {
+                "sequence_index": idx,
                 "control_level": level,
-                "ct_value": ct,
-                "mean": mu,
-                "sd": sigma,
-                "z_score": round(z, 6),
-                "violations": point_violations,
+                "z_score": z,
+                "rules": point_violations,
             }
-        )
+            if is_history:
+                violation_entry["_is_history"] = True
+            violations.append(violation_entry)
+
+        ep_entry: dict = {
+            "cycle": idx,
+            "control_level": level,
+            "ct_value": ct,
+            "mean": mu,
+            "sd": sigma,
+            "z_score": round(z, 6),
+            "violations": point_violations,
+        }
+        if is_history:
+            ep_entry["_is_history"] = True
+        evaluated_points.append(ep_entry)
 
     # Determine overall run status
     if reject_rules:

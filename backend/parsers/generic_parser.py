@@ -62,6 +62,8 @@ class GenericParser(BaseParser):
         level_header = mapping_config.get("control_level", "Sample Name")
         target_header = mapping_config.get("target", "")
         well_header = mapping_config.get("well", "")
+        mean_header = mapping_config.get("mean", "")
+        sd_header = mapping_config.get("sd", "")
 
         parsed_rows: list[dict] = []
         for row in rows_iter:
@@ -92,10 +94,32 @@ class GenericParser(BaseParser):
                 wv = values[col_map[well_header]]
                 well = str(wv).strip() if wv is not None else ""
 
+            # Mean (optional)
+            mean_val = None
+            if mean_header and mean_header in col_map:
+                mean_raw = values[col_map[mean_header]]
+                if mean_raw is not None and str(mean_raw).strip().lower() not in ("", "undetermined"):
+                    try:
+                        mean_val = float(mean_raw)
+                    except (ValueError, TypeError):
+                        mean_val = None
+
+            # SD (optional)
+            sd_val = None
+            if sd_header and sd_header in col_map:
+                sd_raw = values[col_map[sd_header]]
+                if sd_raw is not None and str(sd_raw).strip().lower() not in ("", "undetermined"):
+                    try:
+                        sd_val = float(sd_raw)
+                    except (ValueError, TypeError):
+                        sd_val = None
+
             parsed_rows.append(
                 {
                     "control_level": control_level,
                     "ct_value": ct_value,
+                    "mean": mean_val,
+                    "sd": sd_val,
                     "target": target,
                     "well": well,
                 }

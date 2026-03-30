@@ -122,9 +122,22 @@ async def upload_qc_run(
             "sequence_index": idx,
             "control_level": row["control_level"],
             "ct_value": row["ct_value"],
+            "mean": row.get("mean"),
+            "sd": row.get("sd"),
         })
 
     add_data_points(db, run.id, point_dicts)
+
+    # Audit entry for the upload
+    from backend.db.audit_repository import append_entry
+
+    append_entry(
+        db,
+        event_type="upload",
+        action_detail=f"QC file uploaded: {file_name} for assay {assay}",
+        file_name=file_name,
+        file_hash=file_hash_val,
+    )
 
     # Refresh to include data_points
     db.refresh(run)
@@ -145,17 +158,6 @@ def analyze_qc_run(
     if run is None:
         raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
 
-    # Build points list for the engine
-    points: list[dict] = []
-    for dp in sorted(run.data_points, key=lambda d: d.sequence_index):
-        points.append({
-            "ct_value": dp.ct_value,
-            "mean": dp.mean if dp.mean is not None else dp.ct_value,
-            "sd": dp.sd if dp.sd is not None else 1.0,
-            "control_level": dp.control_level,
-            "sequence_index": dp.sequence_index,
-        })
-
     # Determine if R-4s should be enabled (multi-control)
     control_levels = {dp.control_level for dp in run.data_points}
     assay_config = {
@@ -163,7 +165,98 @@ def analyze_qc_run(
         "controls_per_run": len(control_levels),
     }
 
-    result = evaluate_rules(points, assay_config)
+    # Fetch cross-run history for each control level and prepend to points
+    from backend.db.qc_repository import get_run_history
+    from backend.db.lot_repository import get_control_lot
+
+    all_points: list[dict] = []
+
+    for level in sorted(control_levels):
+        history = get_run_history(
+            db,
+            assay=run.assay,
+            channel=run.channel,
+            control_level=level,
+            reagent_lot_id=run.reagent_lot_id,
+            control_lot_id=run.control_lot_id,
+            limit=20,
+        )
+        # Convert history to engine format (oldest first)
+        for hp in reversed(history):
+            if hp.run_id == run.id:
+                continue  # Skip current run's points
+            if hp.mean is not None and hp.sd is not None:
+                all_points.append({
+                    "ct_value": hp.ct_value,
+                    "mean": hp.mean,
+                    "sd": hp.sd,
+                    "control_level": hp.control_level,
+                    "sequence_index": hp.sequence_index,
+                    "_is_history": True,
+                })
+
+    # Build current run points with mean/sd resolution
+    for dp in sorted(run.data_points, key=lambda d: d.sequence_index):
+        mu = dp.mean
+        sigma = dp.sd
+
+        # If no mean/sd on the data point, try the control lot
+        if mu is None or sigma is None:
+            if run.control_lot_id:
+                control_lot = get_control_lot(db, run.control_lot_id)
+                if control_lot:
+                    mu = mu if mu is not None else control_lot.assigned_mean
+                    sigma = sigma if sigma is not None else control_lot.assigned_sd
+
+        if mu is None or sigma is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Data point at index {dp.sequence_index} has no mean/SD. "
+                       "Upload a file with Ct Mean/SD columns or assign a control lot with mean/SD.",
+            )
+
+        all_points.append({
+            "ct_value": dp.ct_value,
+            "mean": mu,
+            "sd": sigma,
+            "control_level": dp.control_level,
+            "sequence_index": dp.sequence_index,
+            "_is_history": False,
+        })
+
+    result = evaluate_rules(all_points, assay_config)
+
+    # Filter evaluated_points and violations to only current run's points
+    result["evaluated_points"] = [
+        ep for ep in result["evaluated_points"] if not ep.get("_is_history", False)
+    ]
+    result["violations"] = [
+        v for v in result["violations"] if not v.get("_is_history", False)
+    ]
+
+    # Recompute run_status based on filtered violations only
+    filtered_reject_rules: list[str] = []
+    filtered_warning_rules: list[str] = []
+    first_reject = None
+    for v in result["violations"]:
+        for rule in v["rules"]:
+            if rule == "1-2s":
+                if rule not in filtered_warning_rules:
+                    filtered_warning_rules.append(rule)
+            else:
+                if rule not in filtered_reject_rules:
+                    filtered_reject_rules.append(rule)
+                if first_reject is None:
+                    first_reject = rule
+    if filtered_reject_rules:
+        result["run_status"] = "reject"
+    elif filtered_warning_rules:
+        result["run_status"] = "warning"
+    else:
+        result["run_status"] = "pass"
+    result["reject_rules"] = filtered_reject_rules
+    result["warning_rules"] = filtered_warning_rules
+    result["first_reject_rule"] = first_reject
 
     # Update data points in DB with computed z-scores and violations
     for ep in result["evaluated_points"]:
@@ -273,13 +366,33 @@ def get_qc_report(
     if run is None:
         raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
 
-    # Build points list for the engine
+    # Build points list for the engine with mean/sd resolution
+    from backend.db.lot_repository import get_control_lot as _get_control_lot
+
     points: list[dict] = []
     for dp in sorted(run.data_points, key=lambda d: d.sequence_index):
+        mu = dp.mean
+        sigma = dp.sd
+
+        # If no mean/sd on the data point, try the control lot
+        if mu is None or sigma is None:
+            if run.control_lot_id:
+                control_lot = _get_control_lot(db, run.control_lot_id)
+                if control_lot:
+                    mu = mu if mu is not None else control_lot.assigned_mean
+                    sigma = sigma if sigma is not None else control_lot.assigned_sd
+
+        if mu is None or sigma is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Data point at index {dp.sequence_index} has no mean/SD. "
+                       "Upload a file with Ct Mean/SD columns or assign a control lot with mean/SD.",
+            )
+
         points.append({
             "ct_value": dp.ct_value,
-            "mean": dp.mean if dp.mean is not None else dp.ct_value,
-            "sd": dp.sd if dp.sd is not None else 1.0,
+            "mean": mu,
+            "sd": sigma,
             "control_level": dp.control_level,
             "sequence_index": dp.sequence_index,
         })
