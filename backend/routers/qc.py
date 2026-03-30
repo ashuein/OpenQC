@@ -84,18 +84,20 @@ def _build_analysis_points(run, db: Session) -> tuple[list[dict], dict]:
 
     all_points: list[dict] = []
 
-    # Prepend cross-run history per control level
+    # Prepend cross-run history per control level.
+    # Exclude the current run at the DB level so the limit is not wasted,
+    # and bound to runs uploaded before the current run for temporal consistency.
     for level in sorted(control_levels):
         history = get_run_history(
             db, assay=run.assay, channel=run.channel,
             control_level=level,
             reagent_lot_id=run.reagent_lot_id,
             control_lot_id=run.control_lot_id,
+            exclude_run_id=run.id,
+            before=run.uploaded_at,
             limit=20,
         )
         for hp in reversed(history):
-            if hp.run_id == run.id:
-                continue
             mu, sigma = _resolve_mean_sd(hp, run, db)
             if mu is None or sigma is None:
                 continue  # Skip legacy points without resolvable stats

@@ -117,11 +117,20 @@ def get_run_history(
     control_level: str,
     reagent_lot_id: str | None = None,
     control_lot_id: str | None = None,
+    exclude_run_id: str | None = None,
+    before: "datetime | None" = None,
     limit: int = 20,
 ) -> list[QCDataPoint]:
     """Retrieve historical data points for a specific assay/control combination.
 
     Used to populate the z-score history for rules like 2-2s, 4-1s, 10x.
+
+    Parameters
+    ----------
+    exclude_run_id : str | None
+        Run ID to exclude from results (typically the current run).
+    before : datetime | None
+        Only include points from runs uploaded before this timestamp.
     """
     query = (
         db.query(QCDataPoint)
@@ -138,6 +147,10 @@ def get_run_history(
         query = query.filter(QCRun.reagent_lot_id == reagent_lot_id)
     if control_lot_id is not None:
         query = query.filter(QCRun.control_lot_id == control_lot_id)
+    if exclude_run_id is not None:
+        query = query.filter(QCRun.id != exclude_run_id)
+    if before is not None:
+        query = query.filter(QCRun.uploaded_at < before)
 
     return (
         query.order_by(QCRun.uploaded_at.desc(), QCDataPoint.sequence_index)
