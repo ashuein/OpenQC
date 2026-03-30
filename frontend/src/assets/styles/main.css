@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+:root {
+  --bg-app: #0B0D10;
+  --bg-surface: #12161B;
+  --bg-surface-2: #171C22;
+  --bg-highlight: #1E242C;
+  --border-subtle: #262D36;
+  --border-strong: #343D48;
+  --text-primary: #F3F4F6;
+  --text-secondary: #B6BDC7;
+  --text-muted: #8E97A3;
+  --tab-active-bg: #F3F4F6;
+  --tab-active-text: #0B0D10;
+  --tab-inactive-bg: transparent;
+  --tab-inactive-text: #8E97A3;
+  --section-selected: #1A2028;
+  --color-success: #43A047;
+  --color-warning: #F9A825;
+  --color-danger: #E53935;
+}
+
+/* Base reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
