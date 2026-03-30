@@ -46,7 +46,8 @@
       "Bash(py -3.12 -m pytest backend/tests/ -v --basetemp .pytest_tmp --ignore=backend/tests/test_rag.py)",
       "Bash(py -3.12 -m pytest backend/tests/ -q --basetemp .pytest_tmp)",
       "Bash(where codex:*)",
-      "Bash(codex:*)"
+      "Bash(codex:*)",
+      "Bash(curl -sL \"https://www.gnu.org/licenses/gpl-3.0.txt\" -o LICENSE)"
     ]
   }
 }
