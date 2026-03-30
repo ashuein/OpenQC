@@ -14,8 +14,10 @@ from backend.db.qc_repository import (
     create_run,
     delete_run,
     get_run,
+    get_run_history,
     list_runs,
 )
+from backend.db.lot_repository import get_control_lot
 from backend.engine.westgard_rules import evaluate_rules
 from backend.models.qc_schemas import (
     PaginatedRuns,
@@ -51,6 +53,130 @@ def _orm_point_to_schema(dp) -> QCDataPointSchema:
         z_score=dp.z_score,
         violations=violations,
     )
+
+
+def _resolve_mean_sd(dp, run, db: Session) -> tuple[float, float]:
+    """Resolve mean and SD for a data point, falling back to control lot."""
+    mu = dp.mean if hasattr(dp, 'mean') else dp.get("mean")
+    sigma = dp.sd if hasattr(dp, 'sd') else dp.get("sd")
+    lot_id = run.control_lot_id if hasattr(run, 'control_lot_id') else run.get("control_lot_id")
+
+    if mu is None or sigma is None:
+        if lot_id:
+            lot = get_control_lot(db, lot_id)
+            if lot:
+                mu = mu if mu is not None else lot.assigned_mean
+                sigma = sigma if sigma is not None else lot.assigned_sd
+
+    return mu, sigma
+
+
+def _build_analysis_points(run, db: Session) -> tuple[list[dict], dict]:
+    """Build the full point list (history + current) and assay config for Westgard analysis.
+
+    Returns (all_points, assay_config). History points have _is_history=True.
+    """
+    control_levels = {dp.control_level for dp in run.data_points}
+    assay_config = {
+        "r4s_enabled": len(control_levels) > 1,
+        "controls_per_run": len(control_levels),
+    }
+
+    all_points: list[dict] = []
+
+    # Prepend cross-run history per control level
+    for level in sorted(control_levels):
+        history = get_run_history(
+            db, assay=run.assay, channel=run.channel,
+            control_level=level,
+            reagent_lot_id=run.reagent_lot_id,
+            control_lot_id=run.control_lot_id,
+            limit=20,
+        )
+        for hp in reversed(history):
+            if hp.run_id == run.id:
+                continue
+            mu, sigma = _resolve_mean_sd(hp, run, db)
+            if mu is None or sigma is None:
+                continue  # Skip legacy points without resolvable stats
+            all_points.append({
+                "ct_value": hp.ct_value,
+                "mean": mu,
+                "sd": sigma,
+                "control_level": hp.control_level,
+                "sequence_index": hp.sequence_index,
+                "_is_history": True,
+            })
+
+    # Add current run points
+    for dp in sorted(run.data_points, key=lambda d: d.sequence_index):
+        mu, sigma = _resolve_mean_sd(dp, run, db)
+        if mu is None or sigma is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Data point at index {dp.sequence_index} has no mean/SD. "
+                       "Upload a file with Ct Mean/SD columns or assign a control lot with mean/SD.",
+            )
+        all_points.append({
+            "ct_value": dp.ct_value,
+            "mean": mu,
+            "sd": sigma,
+            "control_level": dp.control_level,
+            "sequence_index": dp.sequence_index,
+            "_is_history": False,
+        })
+
+    return all_points, assay_config
+
+
+def _filter_analysis_result(result: dict) -> dict:
+    """Filter evaluate_rules output to only current-run points and recompute stats."""
+    current_points = [ep for ep in result["evaluated_points"] if not ep.get("_is_history", False)]
+    current_violations = [v for v in result["violations"] if not v.get("_is_history", False)]
+
+    # Recompute run status from current-run violations only
+    reject_rules: list[str] = []
+    warning_rules: list[str] = []
+    first_reject = None
+    for v in current_violations:
+        for rule in v["rules"]:
+            if rule == "1-2s":
+                if rule not in warning_rules:
+                    warning_rules.append(rule)
+            else:
+                if rule not in reject_rules:
+                    reject_rules.append(rule)
+                if first_reject is None:
+                    first_reject = rule
+
+    if reject_rules:
+        run_status = "reject"
+    elif warning_rules:
+        run_status = "warning"
+    else:
+        run_status = "pass"
+
+    # Recompute summary stats from current-run points only
+    summary_stats: dict = {}
+    all_z = [ep["z_score"] for ep in current_points]
+    if all_z:
+        summary_stats["mean_z"] = round(sum(all_z) / len(all_z), 6)
+        summary_stats["max_z"] = round(max(all_z), 6)
+        summary_stats["min_z"] = round(min(all_z), 6)
+        summary_stats["point_count"] = len(all_z)
+    if current_points:
+        summary_stats["mean"] = current_points[0]["mean"]
+        summary_stats["sd"] = current_points[0]["sd"]
+
+    return {
+        "run_status": run_status,
+        "first_reject_rule": first_reject,
+        "violations": current_violations,
+        "warning_rules": warning_rules,
+        "reject_rules": reject_rules,
+        "evaluated_points": current_points,
+        "summary_stats": summary_stats,
+    }
 
 
 def _orm_run_to_response(run) -> QCRunResponse:
@@ -158,105 +284,9 @@ def analyze_qc_run(
     if run is None:
         raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
 
-    # Determine if R-4s should be enabled (multi-control)
-    control_levels = {dp.control_level for dp in run.data_points}
-    assay_config = {
-        "r4s_enabled": len(control_levels) > 1,
-        "controls_per_run": len(control_levels),
-    }
-
-    # Fetch cross-run history for each control level and prepend to points
-    from backend.db.qc_repository import get_run_history
-    from backend.db.lot_repository import get_control_lot
-
-    all_points: list[dict] = []
-
-    for level in sorted(control_levels):
-        history = get_run_history(
-            db,
-            assay=run.assay,
-            channel=run.channel,
-            control_level=level,
-            reagent_lot_id=run.reagent_lot_id,
-            control_lot_id=run.control_lot_id,
-            limit=20,
-        )
-        # Convert history to engine format (oldest first)
-        for hp in reversed(history):
-            if hp.run_id == run.id:
-                continue  # Skip current run's points
-            if hp.mean is not None and hp.sd is not None:
-                all_points.append({
-                    "ct_value": hp.ct_value,
-                    "mean": hp.mean,
-                    "sd": hp.sd,
-                    "control_level": hp.control_level,
-                    "sequence_index": hp.sequence_index,
-                    "_is_history": True,
-                })
-
-    # Build current run points with mean/sd resolution
-    for dp in sorted(run.data_points, key=lambda d: d.sequence_index):
-        mu = dp.mean
-        sigma = dp.sd
-
-        # If no mean/sd on the data point, try the control lot
-        if mu is None or sigma is None:
-            if run.control_lot_id:
-                control_lot = get_control_lot(db, run.control_lot_id)
-                if control_lot:
-                    mu = mu if mu is not None else control_lot.assigned_mean
-                    sigma = sigma if sigma is not None else control_lot.assigned_sd
-
-        if mu is None or sigma is None:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Data point at index {dp.sequence_index} has no mean/SD. "
-                       "Upload a file with Ct Mean/SD columns or assign a control lot with mean/SD.",
-            )
-
-        all_points.append({
-            "ct_value": dp.ct_value,
-            "mean": mu,
-            "sd": sigma,
-            "control_level": dp.control_level,
-            "sequence_index": dp.sequence_index,
-            "_is_history": False,
-        })
-
-    result = evaluate_rules(all_points, assay_config)
-
-    # Filter evaluated_points and violations to only current run's points
-    result["evaluated_points"] = [
-        ep for ep in result["evaluated_points"] if not ep.get("_is_history", False)
-    ]
-    result["violations"] = [
-        v for v in result["violations"] if not v.get("_is_history", False)
-    ]
-
-    # Recompute run_status based on filtered violations only
-    filtered_reject_rules: list[str] = []
-    filtered_warning_rules: list[str] = []
-    first_reject = None
-    for v in result["violations"]:
-        for rule in v["rules"]:
-            if rule == "1-2s":
-                if rule not in filtered_warning_rules:
-                    filtered_warning_rules.append(rule)
-            else:
-                if rule not in filtered_reject_rules:
-                    filtered_reject_rules.append(rule)
-                if first_reject is None:
-                    first_reject = rule
-    if filtered_reject_rules:
-        result["run_status"] = "reject"
-    elif filtered_warning_rules:
-        result["run_status"] = "warning"
-    else:
-        result["run_status"] = "pass"
-    result["reject_rules"] = filtered_reject_rules
-    result["warning_rules"] = filtered_warning_rules
-    result["first_reject_rule"] = first_reject
+    all_points, assay_config = _build_analysis_points(run, db)
+    raw_result = evaluate_rules(all_points, assay_config)
+    result = _filter_analysis_result(raw_result)
 
     # Update data points in DB with computed z-scores and violations
     for ep in result["evaluated_points"]:
@@ -366,45 +396,10 @@ def get_qc_report(
     if run is None:
         raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
 
-    # Build points list for the engine with mean/sd resolution
-    from backend.db.lot_repository import get_control_lot as _get_control_lot
-
-    points: list[dict] = []
-    for dp in sorted(run.data_points, key=lambda d: d.sequence_index):
-        mu = dp.mean
-        sigma = dp.sd
-
-        # If no mean/sd on the data point, try the control lot
-        if mu is None or sigma is None:
-            if run.control_lot_id:
-                control_lot = _get_control_lot(db, run.control_lot_id)
-                if control_lot:
-                    mu = mu if mu is not None else control_lot.assigned_mean
-                    sigma = sigma if sigma is not None else control_lot.assigned_sd
-
-        if mu is None or sigma is None:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Data point at index {dp.sequence_index} has no mean/SD. "
-                       "Upload a file with Ct Mean/SD columns or assign a control lot with mean/SD.",
-            )
-
-        points.append({
-            "ct_value": dp.ct_value,
-            "mean": mu,
-            "sd": sigma,
-            "control_level": dp.control_level,
-            "sequence_index": dp.sequence_index,
-        })
-
-    # Determine if R-4s should be enabled (multi-control)
-    control_levels = {dp.control_level for dp in run.data_points}
-    assay_config = {
-        "r4s_enabled": len(control_levels) > 1,
-        "controls_per_run": len(control_levels),
-    }
-
-    result = evaluate_rules(points, assay_config)
+    # Use the same history-aware analysis as /qc/analyze
+    all_points, assay_config = _build_analysis_points(run, db)
+    raw_result = evaluate_rules(all_points, assay_config)
+    result = _filter_analysis_result(raw_result)
 
     # Prepare run_data dict
     run_data = {

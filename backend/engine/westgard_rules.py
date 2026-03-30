@@ -112,7 +112,9 @@ def evaluate_rules(points: list[dict], assay_config: dict) -> dict:
         if level not in z_histories:
             z_histories[level] = []
         z_histories[level].append(z)
-        z_in_run.append(z)
+        # R-4s is a within-run rule — only accumulate current-run points
+        if not is_history:
+            z_in_run.append(z)
 
         level_history = z_histories[level]
 
