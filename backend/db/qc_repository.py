@@ -141,19 +141,28 @@ def get_run_history(
         )
     )
 
+    # Use IS NULL matching when stream keys are None, not wildcard
     if channel is not None:
         query = query.filter(QCRun.channel == channel)
+    else:
+        query = query.filter(QCRun.channel.is_(None))
     if reagent_lot_id is not None:
         query = query.filter(QCRun.reagent_lot_id == reagent_lot_id)
+    else:
+        query = query.filter(QCRun.reagent_lot_id.is_(None))
     if control_lot_id is not None:
         query = query.filter(QCRun.control_lot_id == control_lot_id)
+    else:
+        query = query.filter(QCRun.control_lot_id.is_(None))
     if exclude_run_id is not None:
         query = query.filter(QCRun.id != exclude_run_id)
     if before is not None:
         query = query.filter(QCRun.uploaded_at < before)
 
+    # Order oldest-first so callers get correct chronological sequence
+    # for consecutive Westgard rule evaluation.
     return (
-        query.order_by(QCRun.uploaded_at.desc(), QCDataPoint.sequence_index)
+        query.order_by(QCRun.uploaded_at.asc(), QCDataPoint.sequence_index.asc())
         .limit(limit)
         .all()
     )

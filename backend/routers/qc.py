@@ -97,7 +97,7 @@ def _build_analysis_points(run, db: Session) -> tuple[list[dict], dict]:
             before=run.uploaded_at,
             limit=20,
         )
-        for hp in reversed(history):
+        for hp in history:  # already oldest-first from DB
             mu, sigma = _resolve_mean_sd(hp, run, db)
             if mu is None or sigma is None:
                 continue  # Skip legacy points without resolvable stats
