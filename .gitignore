@@ -33,6 +33,9 @@ docs/tasks/
 docs/AI-ROUTING.md
 docs/ARCHITECTURE.md
 
+# Claude Code
+.claude/
+
 # Debug/tooling artifacts
 .serena/
 frontend/screenshots/
