@@ -167,7 +167,7 @@ function toggleToc() {
 }
 
 .learn-toc__title {
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -210,9 +210,9 @@ function toggleToc() {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 17px;
   color: var(--text-muted);
   transition: color 0.15s, background-color 0.15s;
   border: none;
@@ -240,7 +240,7 @@ function toggleToc() {
 }
 
 .learn-toc__number {
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-muted);
   min-width: 16px;
@@ -262,9 +262,10 @@ function toggleToc() {
   align-items: stretch;
   gap: 16px;
   padding: 24px 48px 48px;
+  max-width: 960px;
+  margin: auto auto 0;
   width: 100%;
   border-top: 1px solid var(--border-subtle);
-  margin-top: auto;
 }
 
 .learn-nav-btn {
@@ -314,6 +315,7 @@ function toggleToc() {
 /* Book-like content styling — unscoped so chapter components inherit */
 .learn-content {
   max-width: 960px;
+  margin: 0 auto;
   padding: 32px 48px 80px;
   line-height: 1.75;
   color: var(--text-primary);

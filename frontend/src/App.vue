@@ -179,7 +179,7 @@ function toggleSidebar() {
   border-radius: 6px;
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 450;
   transition: color 0.15s ease, background-color 0.15s ease;
   white-space: nowrap;
