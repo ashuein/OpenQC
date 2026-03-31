@@ -63,7 +63,11 @@
       "Bash(powershell -Command \"Get-Process python*,uvicorn* -ErrorAction SilentlyContinue | Select-Object Id, ProcessName | Format-Table -AutoSize\")",
       "Bash(powershell -Command \"Stop-Process -Id 26836 -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1; Remove-Item -Force 'D:\\\\SOFTWARE_Projects_LP\\\\OpenQC\\\\backend\\\\data\\\\openqc.db' -ErrorAction Stop; Write-Host 'DELETED'\")",
       "Bash(powershell -Command \"Get-Process python*,uvicorn* -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 2; Remove-Item -Force 'D:\\\\SOFTWARE_Projects_LP\\\\OpenQC\\\\backend\\\\data\\\\openqc.db' -ErrorAction Stop; Write-Host 'DELETED'\")",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(rm -f frontend/screenshot-audit.mjs)",
+      "Bash(rm -rf frontend/screenshots/)",
+      "Bash(npm uninstall:*)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }

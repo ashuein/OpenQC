@@ -26,6 +26,11 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 
+# Debug/tooling artifacts
+.serena/
+frontend/screenshots/
+frontend/screenshot-audit.mjs
+
 # Environment
 .env
 .env.local
