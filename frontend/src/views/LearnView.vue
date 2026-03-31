@@ -99,8 +99,17 @@ function getCurrentIndex() {
 <style scoped>
 .learn-layout {
   display: flex;
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
+  /* Prevent parent .content from scrolling — Learn manages its own scroll */
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 240px; /* width of the app sidebar */
+  z-index: 1;
+  background: var(--bg-app);
 }
 
 /* Sidebar */
