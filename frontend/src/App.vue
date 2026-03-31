@@ -9,6 +9,7 @@ import {
   Shield,
   Package,
   BookOpen,
+  GraduationCap,
   Settings,
 } from 'lucide-vue-next'
 
@@ -22,6 +23,7 @@ const navItems = [
   { to: '/audit', name: 'Audit Trail', icon: Shield },
   { to: '/lots', name: 'Lot Registry', icon: Package },
   { to: '/regulatory', name: 'Regulatory', icon: BookOpen },
+  { to: '/learn', name: 'Learn', icon: GraduationCap },
 ]
 
 const bottomNavItems = [

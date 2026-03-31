@@ -37,6 +37,11 @@ const routes = [
     component: () => import('../views/RegulatoryAssistantView.vue'),
   },
   {
+    path: '/learn',
+    name: 'learn',
+    component: () => import('../views/LearnView.vue'),
+  },
+  {
     path: '/settings',
     name: 'settings',
     component: () => import('../views/SettingsView.vue'),
