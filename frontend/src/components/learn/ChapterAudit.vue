@@ -75,7 +75,7 @@
       </li>
     </ul>
 
-    <div class="diagram">
+    <pre class="diagram">
   SHA-256 Hashing Example:
 
   Input: "QC run uploaded: run_id=42, file=sample_qc.xlsx, user=labtech1"
@@ -91,7 +91,7 @@
   e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8e9d0c1b2a3f4e5d6c7b8a9f0e1d2
 
   Completely different hash — tampering is immediately evident.
-    </div>
+    </pre>
 
     <h2>Hash Chain Integrity</h2>
     <p>
@@ -100,7 +100,7 @@
       blockchain technology.
     </p>
 
-    <div class="diagram">
+    <pre class="diagram">
   Hash Chain Structure:
 
   Entry 1                    Entry 2                    Entry 3
@@ -118,7 +118,7 @@
     - The hash of the PREVIOUS entry
 
   This means modifying ANY entry invalidates ALL subsequent hashes.
-    </div>
+    </pre>
 
     <h3>Why This Matters</h3>
     <p>

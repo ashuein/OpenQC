@@ -84,7 +84,7 @@
       analytical system has changed.
     </p>
 
-    <div class="diagram">
+    <pre class="diagram">
 Ct value vs. Target concentration:
 
   Ct
@@ -101,7 +101,7 @@ Ct value vs. Target concentration:
   Note: Relationship is inversely logarithmic.
   A 1-Ct shift represents approximately a 2-fold
   change in target quantity.
-    </div>
+    </pre>
 
     <h2>How QC Ensures Patient Safety</h2>
     <p>

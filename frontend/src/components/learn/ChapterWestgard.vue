@@ -27,7 +27,7 @@
       against statistical limits derived from the control material's established mean and standard deviation (SD).
     </p>
 
-    <div class="diagram">
+    <pre class="diagram">
   Levey-Jennings Chart Structure
 
   Ct
@@ -53,7 +53,7 @@
   Points within +/-2SD are considered acceptable.
   Points between +/-2SD and +/-3SD trigger warnings.
   Points beyond +/-3SD trigger rejection.
-    </div>
+    </pre>
 
     <h3>How to Read the Chart</h3>
     <ul>
@@ -91,7 +91,7 @@
       of all QC values will exceed +/-2SD by chance alone in a normally distributed dataset, so this rule serves as a
       screening trigger.
     </p>
-    <div class="diagram">
+    <pre class="diagram">
   1-2s Rule: Warning — one point beyond +/-2SD
 
   +3SD  --------------------------------
@@ -105,7 +105,7 @@
 
   Example: Point at run 3 is above +2SD.
   Action:  Trigger warning, evaluate rejection rules.
-    </div>
+    </pre>
 
     <h3>1-3s Rule (Reject)</h3>
     <p>
@@ -116,7 +116,7 @@
       Statistically, only about 0.3% of values should fall beyond +/-3SD. When this occurs, the run must be rejected.
       Common causes include sample mix-up, pipetting error, reagent failure, or instrument malfunction.
     </p>
-    <div class="diagram">
+    <pre class="diagram">
   1-3s Rule: Reject — one point beyond +/-3SD
 
   +3SD  --------.--X--------------------  X = violation
@@ -130,7 +130,7 @@
 
   Example: Point at run 2 exceeds +3SD.
   Action:  Reject the run immediately.
-    </div>
+    </pre>
 
     <h3>2-2s Rule (Reject)</h3>
     <p>
@@ -142,7 +142,7 @@
       direction. It can apply within a single run (if multiple controls are measured) or across consecutive runs.
       Common causes include calibration drift, deteriorating reagent lot, or changes in environmental conditions.
     </p>
-    <div class="diagram">
+    <pre class="diagram">
   2-2s Rule: Reject — two consecutive beyond +/-2SD (same side)
 
   +3SD  --------------------------------
@@ -156,7 +156,7 @@
 
   Example: Runs 2 and 3 both exceed +2SD.
   Action:  Reject — systematic error detected.
-    </div>
+    </pre>
 
     <h3>R-4s Rule (Reject)</h3>
     <p>
@@ -169,7 +169,7 @@
       other is low, the total spread (range) indicates poor precision. Common causes include a pipetting error on one
       of the controls, a bubble in the optical path, or well-to-well variability.
     </p>
-    <div class="diagram">
+    <pre class="diagram">
   R-4s Rule: Reject — within-run range exceeds 4SD
 
   +3SD  --------X (L1)------------------  X = violation
@@ -186,7 +186,7 @@
 
   Example: L1 at +3SD, L2 at -3SD in the same run.
   Action:  Reject — large random error.
-    </div>
+    </pre>
 
     <h3>4-1s Rule (Reject)</h3>
     <p>
@@ -200,7 +200,7 @@
       reagent deterioration, subtle instrument drift, or a new lot of control material with a slightly different
       target value.
     </p>
-    <div class="diagram">
+    <pre class="diagram">
   4-1s Rule: Reject — four consecutive beyond +/-1SD (same side)
 
   +3SD  --------------------------------
@@ -214,7 +214,7 @@
 
   Example: Runs 2-5 are all above +1SD.
   Action:  Reject — systematic shift detected.
-    </div>
+    </pre>
 
     <h3>10x Rule (Reject)</h3>
     <p>
@@ -228,7 +228,7 @@
       indicator of a real shift in the analytical system. Common causes include a slow change in reagent concentration
       over weeks, environmental drift, or a subtle change in instrument calibration.
     </p>
-    <div class="diagram">
+    <pre class="diagram">
   10x Rule: Reject — ten consecutive on same side of mean
 
   +3SD  --------------------------------
@@ -244,7 +244,7 @@
   Some are barely above, some are near +1SD,
   but ALL are on the same side.
   Action:  Reject — sustained bias detected.
-    </div>
+    </pre>
 
     <h2>Summary of Westgard Rules</h2>
 

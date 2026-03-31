@@ -29,7 +29,7 @@
     <p>
       The Sigma metric for a laboratory method is calculated as:
     </p>
-    <div class="diagram">
+    <pre class="diagram">
              TEa - |Bias|
       sigma = -----------
                  CV
@@ -38,7 +38,7 @@
     TEa   = Total allowable error (%)
     Bias  = Systematic error / inaccuracy (%)
     CV    = Coefficient of variation / imprecision (%)
-    </div>
+    </pre>
 
     <h3>Understanding Each Component</h3>
     <ul>
@@ -120,7 +120,7 @@
       (CV as a fraction of TEa) on the x-axis and bias (as a fraction of TEa) on the y-axis. This normalization allows
       methods with different TEa values to be compared on the same chart.
     </p>
-    <div class="diagram">
+    <pre class="diagram">
   NMEDx Chart (Normalized Method Decision Chart)
 
   Bias/TEa
@@ -140,7 +140,7 @@
   Lines represent constant Sigma values.
   Methods in the lower-left have better performance.
   Methods in the upper-right need improvement.
-    </div>
+    </pre>
 
     <p>
       The NMEDx chart in OpenQC color-codes each plotted method according to its Sigma band, making it immediately

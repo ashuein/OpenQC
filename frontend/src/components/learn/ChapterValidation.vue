@@ -34,7 +34,7 @@
     <p>
       The classical approach for calculating LOD involves measuring blank or near-blank samples:
     </p>
-    <div class="diagram">
+    <pre class="diagram">
   LOD Calculation:
 
   LOD = Mean_blank + 3 * SD_blank
@@ -49,7 +49,7 @@
     At each concentration, run 20+ replicates.
     LOD = concentration detected in 95% of replicates
     (determined by probit regression).
-    </div>
+    </pre>
 
     <p>
       For qualitative PCR assays (detected/not detected), LOD is often expressed as copies/mL or IU/mL. For
@@ -74,7 +74,7 @@
     <p>
       LOQ is determined using a CV threshold approach:
     </p>
-    <div class="diagram">
+    <pre class="diagram">
   LOQ Determination (CV Threshold Method):
 
   CV (%)
@@ -97,7 +97,7 @@
     - 20% for most molecular assays
     - 15% for high-precision requirements
     - 25% for screening assays
-    </div>
+    </pre>
 
     <div class="info-box">
       <strong>Note:</strong> LOQ is always equal to or higher than LOD. You can detect an analyte at concentrations
@@ -184,7 +184,7 @@
     </ol>
 
     <h3>Key Statistics</h3>
-    <div class="diagram">
+    <pre class="diagram">
   Linearity Assessment:
 
   Ct value
@@ -213,7 +213,7 @@
       - Theoretical Ct at 1 copy of target
       - Used to calculate amplification efficiency:
         E = (10^(-1/slope) - 1) * 100%
-    </div>
+    </pre>
 
     <h3>What "Good Linearity" Looks Like</h3>
     <ul>
