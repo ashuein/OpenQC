@@ -26,6 +26,13 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 
+# Planning/internal docs (not for public repo)
+pcr-lab-qc-plan-v2.md
+docs/specs/
+docs/tasks/
+docs/AI-ROUTING.md
+docs/ARCHITECTURE.md
+
 # Debug/tooling artifacts
 .serena/
 frontend/screenshots/
