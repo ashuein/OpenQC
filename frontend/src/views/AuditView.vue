@@ -109,8 +109,8 @@ onMounted(() => {
       subtitle="Immutable action log and compliance records"
     >
       <template #actions>
-        <ExportButton label="Export JSON" :loading="exporting" @export="handleExport('json')" />
-        <ExportButton label="Export PDF" :loading="exporting" @export="handleExport('pdf')" />
+        <ExportButton label="JSON" :loading="exporting" @export="handleExport('json')" />
+        <ExportButton label="PDF" :loading="exporting" @export="handleExport('pdf')" />
       </template>
     </PageHeader>
 

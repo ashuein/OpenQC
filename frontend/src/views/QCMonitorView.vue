@@ -257,7 +257,7 @@ onMounted(() => {
 .upload-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 32px;
 }
 
 @media (max-width: 900px) {
@@ -275,13 +275,13 @@ onMounted(() => {
 .upload-grid__form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .form-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .form-field__label {
@@ -292,7 +292,7 @@ onMounted(() => {
 }
 
 .form-field__input {
-  padding: 7px 10px;
+  padding: 8px 12px;
   font-size: 13px;
   color: var(--text-primary);
   background-color: var(--bg-surface);

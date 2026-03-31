@@ -54,6 +54,10 @@ defineProps({
 .page-header__actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
+  flex-shrink: 0;
+  max-width: 50%;
 }
 </style>

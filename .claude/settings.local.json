@@ -51,7 +51,18 @@
       "Bash(py -3.12 -m pip list)",
       "Bash(find D:/SOFTWARE_Projects_LP/OpenQC -name example* -type d)",
       "Bash(find D:/SOFTWARE_Projects_LP/OpenQC -name *.xlsx -o -name *.csv)",
-      "Bash(py -3.12 example_sets/generate_examples.py)"
+      "Bash(py -3.12 example_sets/generate_examples.py)",
+      "Bash(npx playwright:*)",
+      "Bash(py -3.12 -m pip install fastapi uvicorn sqlalchemy pydantic python-multipart openpyxl jinja2)",
+      "Bash(curl -s http://localhost:8000/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(node screenshot-audit.mjs)",
+      "Bash(powershell -Command \"Remove-Item -Force ''D:\\\\SOFTWARE_Projects_LP\\\\OpenQC\\\\backend\\\\data\\\\openqc.db''\")",
+      "Bash(powershell -Command \"Get-Process python*, uvicorn* 2>$null | Select-Object Id, ProcessName, Path | Format-Table -AutoSize\" 2>&1)",
+      "Bash(py -3.12 example_sets/generate_clinical_chemistry.py)",
+      "Bash(powershell -Command \"Get-Process python*,uvicorn* -ErrorAction SilentlyContinue | Select-Object Id, ProcessName | Format-Table -AutoSize\")",
+      "Bash(powershell -Command \"Stop-Process -Id 26836 -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1; Remove-Item -Force 'D:\\\\SOFTWARE_Projects_LP\\\\OpenQC\\\\backend\\\\data\\\\openqc.db' -ErrorAction Stop; Write-Host 'DELETED'\")",
+      "Bash(powershell -Command \"Get-Process python*,uvicorn* -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 2; Remove-Item -Force 'D:\\\\SOFTWARE_Projects_LP\\\\OpenQC\\\\backend\\\\data\\\\openqc.db' -ErrorAction Stop; Write-Host 'DELETED'\")"
     ]
   }
 }

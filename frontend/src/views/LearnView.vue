@@ -10,6 +10,7 @@ import ChapterValidation from '@/components/learn/ChapterValidation.vue'
 import ChapterAudit from '@/components/learn/ChapterAudit.vue'
 import ChapterUsingOpenQC from '@/components/learn/ChapterUsingOpenQC.vue'
 import ChapterExamples from '@/components/learn/ChapterExamples.vue'
+import ChapterExperimentDesign from '@/components/learn/ChapterExperimentDesign.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -22,6 +23,7 @@ const chapters = [
   { id: 'audit', number: 5, title: 'Audit Trail & Compliance', component: ChapterAudit },
   { id: 'using-openqc', number: 6, title: 'Using OpenQC — Step by Step', component: ChapterUsingOpenQC },
   { id: 'examples', number: 7, title: 'Example Datasets Reference', component: ChapterExamples },
+  { id: 'experiment-design', number: 8, title: 'Designing Experiments & Reports', component: ChapterExperimentDesign },
 ]
 
 const activeChapter = ref(route.query.chapter || 'intro')
@@ -329,7 +331,7 @@ function toggleToc() {
 }
 
 .learn-content h1 {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
   margin-bottom: 8px;
   letter-spacing: -0.02em;
@@ -337,7 +339,7 @@ function toggleToc() {
 }
 
 .learn-content h2 {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 600;
   margin-top: 40px;
   margin-bottom: 12px;
@@ -347,7 +349,7 @@ function toggleToc() {
 }
 
 .learn-content h3 {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   margin-top: 28px;
   margin-bottom: 8px;
@@ -356,7 +358,7 @@ function toggleToc() {
 
 .learn-content p {
   margin-bottom: 16px;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text-secondary);
 }
 
@@ -368,7 +370,7 @@ function toggleToc() {
 
 .learn-content li {
   margin-bottom: 6px;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text-secondary);
 }
 
@@ -385,7 +387,7 @@ function toggleToc() {
   background: var(--bg-surface-2);
   padding: 2px 6px;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 14px;
   font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
   color: var(--text-primary);
 }
@@ -402,7 +404,7 @@ function toggleToc() {
 .learn-content pre code {
   background: none;
   padding: 0;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.6;
 }
 
@@ -440,9 +442,9 @@ function toggleToc() {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  padding: 20px;
+  padding: 24px;
   font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.4;
   overflow-x: auto;
   margin-bottom: 20px;
@@ -455,7 +457,7 @@ function toggleToc() {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .learn-content th {
