@@ -1,4 +1,5 @@
 <script setup>
+import PlotlyLJDiagram from './PlotlyLJDiagram.vue'
 </script>
 
 <template>
@@ -27,33 +28,16 @@
       against statistical limits derived from the control material's established mean and standard deviation (SD).
     </p>
 
-    <pre class="diagram">
-  Levey-Jennings Chart Structure
-
-  Ct
-  value
-    |
-  +3SD -------.------.-------.------- Reject zone (1-3s rule)
-    |         |      |       |
-  +2SD -------.------.-------.------- Warning zone (1-2s rule)
-    |         |      |       |
-  +1SD -------.------.-------.-------
-    |         |      |       |
-  Mean =======#======#=======#======= Central line
-    |         |      |       |
-  -1SD -------.------.-------.-------
-    |         |      |       |
-  -2SD -------.------.-------.------- Warning zone (1-2s rule)
-    |         |      |       |
-  -3SD -------.------.-------.------- Reject zone (1-3s rule)
-    |
-    +----1----2----3----4----5----6-- Run number (time)
-
-  Each data point (.) represents a single QC measurement.
-  Points within +/-2SD are considered acceptable.
-  Points between +/-2SD and +/-3SD trigger warnings.
-  Points beyond +/-3SD trigger rejection.
-    </pre>
+    <PlotlyLJDiagram
+      title="Levey-Jennings Chart — Normal QC Run"
+      :points="[
+        {x:1, y:25.2, color:'normal'}, {x:2, y:24.8, color:'normal'},
+        {x:3, y:25.5, color:'normal'}, {x:4, y:24.6, color:'normal'},
+        {x:5, y:25.1, color:'normal'}, {x:6, y:25.3, color:'normal'},
+        {x:7, y:24.9, color:'normal'},
+      ]"
+      :mean="25" :sd="0.5"
+    />
 
     <h3>How to Read the Chart</h3>
     <ul>
@@ -91,21 +75,16 @@
       of all QC values will exceed +/-2SD by chance alone in a normally distributed dataset, so this rule serves as a
       screening trigger.
     </p>
-    <pre class="diagram">
-  1-2s Rule: Warning — one point beyond +/-2SD
-
-  +3SD  --------------------------------
-  +2SD  --------------------------------
-  +1SD  ------*----*---------*----------
-  Mean  ==*==========*===*==============
-  -1SD  ------------------*-------------
-  -2SD  -------=---------=--------------
-  -3SD  --------------------------------
-              Run:  1  2  3  4  5  6  7
-
-  Example: Point at run 3 is above +2SD.
-  Action:  Trigger warning, evaluate rejection rules.
-    </pre>
+    <PlotlyLJDiagram
+      title="1-2s Rule — Warning"
+      :points="[
+        {x:1, y:25.1, color:'normal'}, {x:2, y:24.8, color:'normal'},
+        {x:3, y:26.2, color:'warning'}, {x:4, y:25.0, color:'normal'},
+        {x:5, y:24.7, color:'normal'}, {x:6, y:25.3, color:'normal'},
+      ]"
+      :mean="25" :sd="0.5"
+      annotation="Point 3 exceeds +2SD — Warning triggered"
+    />
 
     <h3>1-3s Rule (Reject)</h3>
     <p>
@@ -116,21 +95,15 @@
       Statistically, only about 0.3% of values should fall beyond +/-3SD. When this occurs, the run must be rejected.
       Common causes include sample mix-up, pipetting error, reagent failure, or instrument malfunction.
     </p>
-    <pre class="diagram">
-  1-3s Rule: Reject — one point beyond +/-3SD
-
-  +3SD  --------.--X--------------------  X = violation
-  +2SD  --------.--.--------------------
-  +1SD  ---*----.--.-------*------------
-  Mean  ===========.===*================
-  -1SD  --------.---.------------------
-  -2SD  --------.--.--------------------
-  -3SD  --------.---.-------------------
-              Run:  1  2  3  4  5  6  7
-
-  Example: Point at run 2 exceeds +3SD.
-  Action:  Reject the run immediately.
-    </pre>
+    <PlotlyLJDiagram
+      title="1-3s Rule — Reject"
+      :points="[
+        {x:1, y:25.0, color:'normal'}, {x:2, y:26.8, color:'reject'},
+        {x:3, y:25.2, color:'normal'}, {x:4, y:24.9, color:'normal'},
+      ]"
+      :mean="25" :sd="0.5"
+      annotation="Point 2 exceeds +3SD — Run REJECTED"
+    />
 
     <h3>2-2s Rule (Reject)</h3>
     <p>
@@ -142,21 +115,15 @@
       direction. It can apply within a single run (if multiple controls are measured) or across consecutive runs.
       Common causes include calibration drift, deteriorating reagent lot, or changes in environmental conditions.
     </p>
-    <pre class="diagram">
-  2-2s Rule: Reject — two consecutive beyond +/-2SD (same side)
-
-  +3SD  --------------------------------
-  +2SD  ------X---X---------------------  X = violations
-  +1SD  --*---------*----*--------------
-  Mean  ================================
-  -1SD  --------------------*-----------
-  -2SD  --------------------------------
-  -3SD  --------------------------------
-            Run:  1  2  3  4  5  6  7
-
-  Example: Runs 2 and 3 both exceed +2SD.
-  Action:  Reject — systematic error detected.
-    </pre>
+    <PlotlyLJDiagram
+      title="2-2s Rule — Reject"
+      :points="[
+        {x:1, y:25.1, color:'normal'}, {x:2, y:26.15, color:'reject'},
+        {x:3, y:26.20, color:'reject'}, {x:4, y:25.0, color:'normal'},
+      ]"
+      :mean="25" :sd="0.5"
+      annotation="Points 2-3 both exceed +2SD — Systematic error detected"
+    />
 
     <h3>R-4s Rule (Reject)</h3>
     <p>
@@ -169,24 +136,14 @@
       other is low, the total spread (range) indicates poor precision. Common causes include a pipetting error on one
       of the controls, a bubble in the optical path, or well-to-well variability.
     </p>
-    <pre class="diagram">
-  R-4s Rule: Reject — within-run range exceeds 4SD
-
-  +3SD  --------X (L1)------------------  X = violation
-  +2SD  --------------------------------
-  +1SD  --------------------------------
-  Mean  ================================
-  -1SD  --------------------------------
-  -2SD  --------------------------------
-  -3SD  --------X (L2)------------------  X = violation
-                 |
-                 |-- Range = 6SD (exceeds 4SD)
-                 |
-            Within single run
-
-  Example: L1 at +3SD, L2 at -3SD in the same run.
-  Action:  Reject — large random error.
-    </pre>
+    <PlotlyLJDiagram
+      title="R-4s Rule — Reject (Within-Run)"
+      :points="[
+        {x:1, y:26.2, color:'reject'}, {x:1, y:23.5, color:'reject'},
+      ]"
+      :mean="25" :sd="0.5"
+      annotation="L1 at +2.4SD, L2 at -3.0SD in same run — Range > 4SD"
+    />
 
     <h3>4-1s Rule (Reject)</h3>
     <p>
@@ -200,21 +157,16 @@
       reagent deterioration, subtle instrument drift, or a new lot of control material with a slightly different
       target value.
     </p>
-    <pre class="diagram">
-  4-1s Rule: Reject — four consecutive beyond +/-1SD (same side)
-
-  +3SD  --------------------------------
-  +2SD  --------------------------------
-  +1SD  ------X---X---X---X-------------  X = violations
-  Mean  ================================
-  -1SD  --*-------------------*---------
-  -2SD  --------------------------------
-  -3SD  --------------------------------
-            Run:  1  2  3  4  5  6  7
-
-  Example: Runs 2-5 are all above +1SD.
-  Action:  Reject — systematic shift detected.
-    </pre>
+    <PlotlyLJDiagram
+      title="4-1s Rule — Reject"
+      :points="[
+        {x:1, y:25.0, color:'normal'}, {x:2, y:25.7, color:'reject'},
+        {x:3, y:25.8, color:'reject'}, {x:4, y:25.6, color:'reject'},
+        {x:5, y:25.65, color:'reject'}, {x:6, y:25.1, color:'normal'},
+      ]"
+      :mean="25" :sd="0.5"
+      annotation="Points 2-5 all above +1SD — Systematic shift"
+    />
 
     <h3>10x Rule (Reject)</h3>
     <p>
@@ -228,23 +180,19 @@
       indicator of a real shift in the analytical system. Common causes include a slow change in reagent concentration
       over weeks, environmental drift, or a subtle change in instrument calibration.
     </p>
-    <pre class="diagram">
-  10x Rule: Reject — ten consecutive on same side of mean
-
-  +3SD  --------------------------------
-  +2SD  --------------------------------
-  +1SD  --*---*-------*-----*---*-------
-  Mean  ================================
-  -1SD  -------=--*-----*--------=--*---
-  -2SD  --------------------------------
-  -3SD  --------------------------------
-            Run:  1  2  3  4  5  6  7  8  9 10 11 12
-
-  Example: Runs 1-10 are all above the mean.
-  Some are barely above, some are near +1SD,
-  but ALL are on the same side.
-  Action:  Reject — sustained bias detected.
-    </pre>
+    <PlotlyLJDiagram
+      title="10x Rule — Reject"
+      :points="[
+        {x:1, y:25.1, color:'reject'}, {x:2, y:25.3, color:'reject'},
+        {x:3, y:25.05, color:'reject'}, {x:4, y:25.2, color:'reject'},
+        {x:5, y:25.15, color:'reject'}, {x:6, y:25.4, color:'reject'},
+        {x:7, y:25.25, color:'reject'}, {x:8, y:25.1, color:'reject'},
+        {x:9, y:25.35, color:'reject'}, {x:10, y:25.2, color:'reject'},
+        {x:11, y:24.9, color:'normal'}, {x:12, y:25.0, color:'normal'},
+      ]"
+      :mean="25" :sd="0.5"
+      annotation="Points 1-10 all above mean — Sustained bias"
+    />
 
     <h2>Summary of Westgard Rules</h2>
 

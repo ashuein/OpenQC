@@ -1,59 +1,144 @@
 <script setup>
 import { computed } from 'vue'
-import { cn } from '@/lib/utils'
-import { cva } from 'class-variance-authority'
-
-const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--border-strong)] disabled:pointer-events-none disabled:opacity-50',
-  {
-    variants: {
-      variant: {
-        default: 'bg-[var(--bg-highlight)] text-[var(--text-primary)] hover:bg-[var(--border-subtle)]',
-        destructive: 'bg-[var(--color-danger)] text-white hover:bg-[var(--color-danger)]/90',
-        outline: 'border border-[var(--border-strong)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)]',
-        ghost: 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)]',
-        link: 'text-[var(--text-secondary)] underline-offset-4 hover:underline hover:text-[var(--text-primary)]',
-      },
-      size: {
-        default: 'h-9 px-4 py-2',
-        sm: 'h-8 rounded-md px-3 text-xs',
-        lg: 'h-10 rounded-md px-8',
-        icon: 'h-9 w-9',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-    },
-  }
-)
 
 const props = defineProps({
   variant: {
     type: String,
     default: 'default',
+    validator: (v) => ['default', 'destructive', 'outline', 'ghost', 'link'].includes(v),
   },
   size: {
     type: String,
     default: 'default',
+    validator: (v) => ['default', 'sm', 'lg', 'icon'].includes(v),
   },
-  class: {
-    type: String,
-    default: '',
-  },
-  asChild: {
+  disabled: {
     type: Boolean,
     default: false,
   },
 })
 
-const delegatedClass = computed(() =>
-  cn(buttonVariants({ variant: props.variant, size: props.size }), props.class)
-)
+const btnClass = computed(() => {
+  const classes = ['btn', `btn--${props.variant}`, `btn--${props.size}`]
+  if (props.disabled) classes.push('btn--disabled')
+  return classes.join(' ')
+})
 </script>
 
 <template>
-  <button :class="delegatedClass">
+  <button :class="btnClass" :disabled="disabled">
     <slot />
   </button>
 </template>
+
+<style scoped>
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  border-radius: 6px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  border: 1px solid transparent;
+  line-height: 1;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--border-strong);
+  outline-offset: 2px;
+}
+
+/* Sizes */
+.btn--default {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.btn--sm {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.btn--lg {
+  height: 40px;
+  padding: 0 24px;
+  font-size: 15px;
+}
+
+.btn--icon {
+  height: 36px;
+  width: 36px;
+  padding: 0;
+  font-size: 14px;
+}
+
+/* Variants */
+.btn--default {
+  background-color: var(--bg-highlight);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.btn--default:hover:not(:disabled) {
+  background-color: var(--border-subtle);
+}
+
+.btn--destructive {
+  background-color: var(--color-danger);
+  color: #ffffff;
+  border-color: var(--color-danger);
+}
+
+.btn--destructive:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn--outline {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border-strong);
+}
+
+.btn--outline:hover:not(:disabled) {
+  background-color: var(--bg-surface-2);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.btn--ghost {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border-color: transparent;
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background-color: var(--bg-surface-2);
+  color: var(--text-primary);
+}
+
+.btn--link {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border-color: transparent;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.btn--link:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+/* Disabled */
+.btn--disabled,
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+</style>

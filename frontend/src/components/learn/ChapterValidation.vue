@@ -1,4 +1,5 @@
 <script setup>
+import PlotlyLinearityDiagram from './PlotlyLinearityDiagram.vue'
 </script>
 
 <template>
@@ -183,20 +184,16 @@
       <li>Perform linear regression analysis.</li>
     </ol>
 
+    <PlotlyLinearityDiagram
+      :points="[
+        { x: 1, y: 35.2 }, { x: 2, y: 31.8 }, { x: 3, y: 28.5 },
+        { x: 4, y: 25.1 }, { x: 5, y: 21.9 }, { x: 6, y: 18.4 },
+      ]"
+      :slope="-3.35" :intercept="38.6" :rSquared="0.9983"
+    />
+
     <h3>Key Statistics</h3>
     <pre class="diagram">
-  Linearity Assessment:
-
-  Ct value
-    35 |  *
-    30 |     *
-    25 |        *
-    20 |           *          Regression line:
-    15 |              *       y = mx + b
-    10 |                 *
-       +----|----|----|----|----|-----> Log concentration
-       1    2    3    4    5    6
-
   Key metrics:
     R² (coefficient of determination)
       - Measures how well data fits the regression line

@@ -85,11 +85,11 @@ onMounted(() => {
             <Activity :size="16" :stroke-width="1.75" />
             <span>Upload QC Data</span>
           </Button>
-          <Button variant="outline" @click="router.push('/sigma')">
+          <Button variant="ghost" @click="router.push('/sigma')">
             <TrendingUp :size="16" :stroke-width="1.75" />
             <span>View Sigma</span>
           </Button>
-          <Button variant="outline" @click="router.push('/audit')">
+          <Button variant="ghost" @click="router.push('/audit')">
             <Shield :size="16" :stroke-width="1.75" />
             <span>Audit Trail</span>
           </Button>

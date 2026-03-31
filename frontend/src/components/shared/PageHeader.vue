@@ -28,7 +28,7 @@ defineProps({
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 24px 28px 20px;
+  padding: 24px 32px 20px 28px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -59,5 +59,6 @@ defineProps({
   gap: 8px;
   flex-shrink: 0;
   max-width: 50%;
+  padding-right: 4px;
 }
 </style>

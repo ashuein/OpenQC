@@ -1,4 +1,5 @@
 <script setup>
+import PlotlyNMEDxDiagram from './PlotlyNMEDxDiagram.vue'
 </script>
 
 <template>
@@ -120,27 +121,15 @@
       (CV as a fraction of TEa) on the x-axis and bias (as a fraction of TEa) on the y-axis. This normalization allows
       methods with different TEa values to be compared on the same chart.
     </p>
-    <pre class="diagram">
-  NMEDx Chart (Normalized Method Decision Chart)
-
-  Bias/TEa
-  1.0 |                                    Unacceptable
-      |  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-  0.8 |     .                                  .
-      |        .     Poor (2-3 sigma)       .
-  0.6 |           .                      .
-      |              .  Marginal       .
-  0.4 |                 . (3-4)     .
-      |                    .     .    Good (4-5 sigma)
-  0.2 |                       .
-      |          Excellent  .     World Class (>=6)
-  0.0 +---+---+---+---+---+---+---+---+---+--> CV/TEa
-      0  0.05 0.10 0.15 0.20 0.25 0.30 0.35
-
-  Lines represent constant Sigma values.
-  Methods in the lower-left have better performance.
-  Methods in the upper-right need improvement.
-    </pre>
+    <PlotlyNMEDxDiagram
+      :assays="[
+        { name: 'SARS-CoV-2', cvTEa: 0.08, biasTEa: 0.15, sigma: 5.8 },
+        { name: 'Influenza A', cvTEa: 0.12, biasTEa: 0.30, sigma: 4.2 },
+        { name: 'RSV', cvTEa: 0.18, biasTEa: 0.45, sigma: 2.8 },
+        { name: 'HBV Viral Load', cvTEa: 0.05, biasTEa: 0.10, sigma: 6.5 },
+        { name: 'HCV Genotype', cvTEa: 0.15, biasTEa: 0.35, sigma: 3.5 },
+      ]"
+    />
 
     <p>
       The NMEDx chart in OpenQC color-codes each plotted method according to its Sigma band, making it immediately
