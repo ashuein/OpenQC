@@ -1,6 +1,7 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { PanelRightClose, PanelRightOpen } from 'lucide-vue-next'
 
 import ChapterIntro from '@/components/learn/ChapterIntro.vue'
 import ChapterWestgard from '@/components/learn/ChapterWestgard.vue'
@@ -24,6 +25,7 @@ const chapters = [
 ]
 
 const activeChapter = ref(route.query.chapter || 'intro')
+const tocCollapsed = ref(false)
 
 watch(() => route.query.chapter, (val) => {
   if (val) activeChapter.value = val
@@ -52,26 +54,15 @@ function navigateChapter(direction) {
 function getCurrentIndex() {
   return chapters.findIndex(c => c.id === activeChapter.value)
 }
+
+function toggleToc() {
+  tocCollapsed.value = !tocCollapsed.value
+}
 </script>
 
 <template>
   <div class="learn-layout">
-    <aside class="learn-sidebar">
-      <div class="learn-sidebar__title">Documentation</div>
-      <nav class="learn-sidebar__nav">
-        <button
-          v-for="chapter in chapters"
-          :key="chapter.id"
-          class="learn-sidebar__item"
-          :class="{ 'learn-sidebar__item--active': activeChapter === chapter.id }"
-          @click="selectChapter(chapter.id)"
-        >
-          <span class="learn-sidebar__number">{{ chapter.number }}</span>
-          <span class="learn-sidebar__label">{{ chapter.title }}</span>
-        </button>
-      </nav>
-    </aside>
-    <main class="learn-main">
+    <main class="learn-main" ref="mainRef">
       <component :is="getActiveComponent()" />
       <div class="learn-nav-footer">
         <button
@@ -93,6 +84,39 @@ function getCurrentIndex() {
         </button>
       </div>
     </main>
+    <aside class="learn-toc" :class="{ 'learn-toc--collapsed': tocCollapsed }">
+      <div class="learn-toc__header">
+        <span v-if="!tocCollapsed" class="learn-toc__title">Chapters</span>
+        <button class="learn-toc__toggle" @click="toggleToc" :title="tocCollapsed ? 'Show chapters' : 'Hide chapters'">
+          <PanelRightOpen v-if="tocCollapsed" :size="16" :stroke-width="1.75" />
+          <PanelRightClose v-else :size="16" :stroke-width="1.75" />
+        </button>
+      </div>
+      <nav v-if="!tocCollapsed" class="learn-toc__nav">
+        <button
+          v-for="chapter in chapters"
+          :key="chapter.id"
+          class="learn-toc__item"
+          :class="{ 'learn-toc__item--active': activeChapter === chapter.id }"
+          @click="selectChapter(chapter.id)"
+        >
+          <span class="learn-toc__number">{{ chapter.number }}</span>
+          <span class="learn-toc__label">{{ chapter.title }}</span>
+        </button>
+      </nav>
+      <nav v-else class="learn-toc__nav">
+        <button
+          v-for="chapter in chapters"
+          :key="chapter.id"
+          class="learn-toc__item learn-toc__item--icon"
+          :class="{ 'learn-toc__item--active': activeChapter === chapter.id }"
+          :title="chapter.title"
+          @click="selectChapter(chapter.id)"
+        >
+          <span class="learn-toc__number">{{ chapter.number }}</span>
+        </button>
+      </nav>
+    </aside>
   </div>
 </template>
 
@@ -102,85 +126,9 @@ function getCurrentIndex() {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
-  /* Prevent parent .content from scrolling — Learn manages its own scroll */
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 240px; /* width of the app sidebar */
-  z-index: 1;
-  background: var(--bg-app);
 }
 
-/* Sidebar */
-.learn-sidebar {
-  width: 260px;
-  flex-shrink: 0;
-  background: var(--bg-surface);
-  border-right: 1px solid var(--border-subtle);
-  padding: 24px 0;
-  overflow-y: auto;
-}
-
-.learn-sidebar__title {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  padding: 0 20px;
-  margin-bottom: 16px;
-}
-
-.learn-sidebar__nav {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.learn-sidebar__item {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  padding: 8px 20px;
-  cursor: pointer;
-  font-size: 14px;
-  color: var(--text-muted);
-  transition: color 0.15s, background-color 0.15s;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  line-height: 1.4;
-}
-
-.learn-sidebar__item:hover {
-  color: var(--text-secondary);
-  background: var(--bg-surface-2);
-}
-
-.learn-sidebar__item--active {
-  color: var(--text-primary);
-  background: var(--bg-highlight);
-}
-
-.learn-sidebar__number {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  min-width: 18px;
-  flex-shrink: 0;
-}
-
-.learn-sidebar__item--active .learn-sidebar__number {
-  color: var(--text-secondary);
-}
-
-.learn-sidebar__label {
-  flex: 1;
-}
-
-/* Main content area */
+/* Main content — scrollable, takes remaining space */
 .learn-main {
   flex: 1;
   min-width: 0;
@@ -189,14 +137,131 @@ function getCurrentIndex() {
   flex-direction: column;
 }
 
+/* Right-side table of contents */
+.learn-toc {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  transition: width 0.2s ease;
+}
+
+.learn-toc--collapsed {
+  width: 48px;
+}
+
+.learn-toc__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px;
+  gap: 8px;
+}
+
+.learn-toc--collapsed .learn-toc__header {
+  justify-content: center;
+  padding: 16px 8px 12px;
+}
+
+.learn-toc__title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.learn-toc__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.learn-toc__toggle:hover {
+  color: var(--text-secondary);
+  background-color: var(--bg-surface-2);
+}
+
+.learn-toc__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 8px;
+}
+
+.learn-toc--collapsed .learn-toc__nav {
+  padding: 0 6px;
+}
+
+.learn-toc__item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-muted);
+  transition: color 0.15s, background-color 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  line-height: 1.4;
+  border-radius: 6px;
+}
+
+.learn-toc__item--icon {
+  justify-content: center;
+  padding: 8px;
+  gap: 0;
+}
+
+.learn-toc__item:hover {
+  color: var(--text-secondary);
+  background: var(--bg-surface-2);
+}
+
+.learn-toc__item--active {
+  color: var(--text-primary);
+  background: var(--bg-highlight);
+}
+
+.learn-toc__number {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 16px;
+  flex-shrink: 0;
+}
+
+.learn-toc__item--active .learn-toc__number {
+  color: var(--text-secondary);
+}
+
+.learn-toc__label {
+  flex: 1;
+}
+
 /* Chapter navigation footer */
 .learn-nav-footer {
   display: flex;
   justify-content: space-between;
   align-items: stretch;
   gap: 16px;
-  padding: 24px 40px 48px;
-  max-width: 860px;
+  padding: 24px 48px 48px;
   width: 100%;
   border-top: 1px solid var(--border-subtle);
   margin-top: auto;
@@ -212,7 +277,7 @@ function getCurrentIndex() {
   background: var(--bg-surface);
   cursor: pointer;
   transition: border-color 0.15s, background-color 0.15s;
-  max-width: 280px;
+  max-width: 320px;
 }
 
 .learn-nav-btn:hover {
@@ -248,8 +313,8 @@ function getCurrentIndex() {
 <style>
 /* Book-like content styling — unscoped so chapter components inherit */
 .learn-content {
-  max-width: 780px;
-  padding: 32px 40px 80px;
+  max-width: 960px;
+  padding: 32px 48px 80px;
   line-height: 1.75;
   color: var(--text-primary);
 }
