@@ -387,7 +387,7 @@ onMounted(() => { loadRuns() })
       </section>
 
       <!-- Run History -->
-      <section class="section">
+      <section class="section no-print">
         <h2 class="section__title">Run History</h2>
         <div class="section__content">
           <template v-if="runsLoading && store.runs.length === 0">

@@ -118,6 +118,11 @@ body {
     overflow: visible !important;
   }
 
+  /* Hide sections marked no-print */
+  .no-print {
+    display: none !important;
+  }
+
   /* Hide interactive elements */
   .upload-card,
   .column-mapping,
