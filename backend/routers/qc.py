@@ -204,8 +204,8 @@ def _orm_run_to_response(run) -> QCRunResponse:
 @router.post("/upload", response_model=QCRunResponse)
 async def upload_qc_run(
     file: UploadFile = File(...),
-    instrument: str = Form(...),
-    assay: str = Form(...),
+    instrument: str = Form("Unknown"),
+    assay: str = Form("Unknown"),
     channel: str | None = Form(None),
     reagent_lot_id: str | None = Form(None),
     control_lot_id: str | None = Form(None),

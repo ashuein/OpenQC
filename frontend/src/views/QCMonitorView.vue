@@ -34,9 +34,10 @@ function onFileSelected(file) {
 async function handleUpload() {
   if (!selectedFile.value) return
 
-  const metadata = {}
-  if (instrument.value) metadata.instrument = instrument.value
-  if (assay.value) metadata.assay = assay.value
+  const metadata = {
+    instrument: instrument.value || 'Unknown',
+    assay: assay.value || 'Unknown',
+  }
   if (channel.value) metadata.channel = channel.value
   if (reagentLotId.value) metadata.reagent_lot_id = reagentLotId.value
   if (controlLotId.value) metadata.control_lot_id = controlLotId.value
