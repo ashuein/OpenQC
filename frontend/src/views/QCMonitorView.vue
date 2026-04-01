@@ -215,6 +215,15 @@ function handleSelectRun(runId) {
   store.loadRunDetail(runId)
 }
 
+async function handleDeleteRun(runId) {
+  try {
+    await store.removeRun(runId)
+    loadRuns()
+  } catch (e) {
+    showErrorToast(e.message || 'Failed to delete run.')
+  }
+}
+
 onMounted(() => { loadRuns() })
 </script>
 
@@ -374,7 +383,7 @@ onMounted(() => { loadRuns() })
             <div class="skeleton skeleton--table" />
           </template>
           <template v-else>
-            <RunSummaryTable :runs="store.runs" @select-run="handleSelectRun" />
+            <RunSummaryTable :runs="store.runs" @select-run="handleSelectRun" @delete-run="handleDeleteRun" />
           </template>
         </div>
       </section>

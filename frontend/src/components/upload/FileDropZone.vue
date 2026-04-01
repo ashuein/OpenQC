@@ -1,42 +1,16 @@
 <script setup>
 import { ref } from 'vue'
-import { Upload } from 'lucide-vue-next'
+import { Upload, FileSpreadsheet, X } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
 
 const emit = defineEmits(['file-selected'])
 
-const isDragOver = ref(false)
 const selectedFile = ref(null)
 const fileInputRef = ref(null)
 
-const acceptedTypes = [
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/vnd.ms-excel',
-]
-const acceptedExtensions = ['.xlsx', '.xls']
-
 function isValidFile(file) {
-  if (acceptedTypes.includes(file.type)) return true
   const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
-  return acceptedExtensions.includes(ext)
-}
-
-function handleDragOver(e) {
-  e.preventDefault()
-  isDragOver.value = true
-}
-
-function handleDragLeave() {
-  isDragOver.value = false
-}
-
-function handleDrop(e) {
-  e.preventDefault()
-  isDragOver.value = false
-  const file = e.dataTransfer.files[0]
-  if (file && isValidFile(file)) {
-    selectedFile.value = file
-    emit('file-selected', file)
-  }
+  return ['.xlsx', '.xls'].includes(ext)
 }
 
 function handleClick() {
@@ -49,6 +23,21 @@ function handleFileInput(e) {
     selectedFile.value = file
     emit('file-selected', file)
   }
+  // Reset so same file can be re-selected
+  e.target.value = ''
+}
+
+function handleDrop(e) {
+  e.preventDefault()
+  const file = e.dataTransfer.files[0]
+  if (file && isValidFile(file)) {
+    selectedFile.value = file
+    emit('file-selected', file)
+  }
+}
+
+function clearFile() {
+  selectedFile.value = null
 }
 
 function formatSize(bytes) {
@@ -60,110 +49,103 @@ function formatSize(bytes) {
 
 <template>
   <div
-    class="drop-zone"
-    :class="{ 'drop-zone--active': isDragOver, 'drop-zone--has-file': selectedFile }"
-    @dragover="handleDragOver"
-    @dragleave="handleDragLeave"
+    class="file-picker"
+    @dragover.prevent
     @drop="handleDrop"
-    @click="handleClick"
   >
     <input
       ref="fileInputRef"
       type="file"
       accept=".xlsx,.xls"
-      class="drop-zone__input"
+      class="file-picker__input"
       @change="handleFileInput"
     />
 
     <template v-if="selectedFile">
-      <div class="drop-zone__file-info">
-        <Upload :size="20" :stroke-width="1.75" class="drop-zone__icon" />
-        <div class="drop-zone__file-details">
-          <span class="drop-zone__file-name">{{ selectedFile.name }}</span>
-          <span class="drop-zone__file-size">{{ formatSize(selectedFile.size) }}</span>
-        </div>
+      <div class="file-picker__selected">
+        <FileSpreadsheet :size="16" :stroke-width="1.75" class="file-picker__icon" />
+        <span class="file-picker__name">{{ selectedFile.name }}</span>
+        <span class="file-picker__size">{{ formatSize(selectedFile.size) }}</span>
+        <button class="file-picker__clear" @click.stop="clearFile" title="Remove file">
+          <X :size="14" :stroke-width="2" />
+        </button>
       </div>
-      <span class="drop-zone__hint">Click or drop to replace</span>
     </template>
-
     <template v-else>
-      <Upload :size="24" :stroke-width="1.5" class="drop-zone__icon" />
-      <span class="drop-zone__label">Drop an Excel file here, or click to browse</span>
-      <span class="drop-zone__hint">Accepts .xlsx and .xls files</span>
+      <Button size="sm" variant="outline" @click="handleClick">
+        <Upload :size="14" :stroke-width="1.75" />
+        Choose File
+      </Button>
+      <span class="file-picker__hint">.xlsx / .xls — or drop here</span>
     </template>
   </div>
 </template>
 
 <style scoped>
-.drop-zone {
+.file-picker {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 32px 24px;
-  border: 1px dashed var(--border-strong);
-  border-radius: 8px;
-  background-color: var(--bg-surface);
-  cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-  min-height: 160px;
+  gap: 10px;
+  min-height: 36px;
 }
 
-.drop-zone:hover {
-  border-color: var(--text-muted);
-  background-color: var(--bg-surface-2);
-}
-
-.drop-zone--active {
-  border-color: var(--text-secondary);
-  background-color: var(--bg-highlight);
-}
-
-.drop-zone--has-file {
-  border-style: solid;
-  border-color: var(--border-strong);
-}
-
-.drop-zone__input {
+.file-picker__input {
   display: none;
 }
 
-.drop-zone__icon {
-  color: var(--text-muted);
-}
-
-.drop-zone__label {
-  font-size: 14px;
-  font-weight: 450;
-  color: var(--text-secondary);
-}
-
-.drop-zone__hint {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.drop-zone__file-info {
+.file-picker__selected {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  padding: 4px 8px 4px 10px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  max-width: 320px;
 }
 
-.drop-zone__file-details {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.file-picker__icon {
+  color: var(--color-success);
+  flex-shrink: 0;
 }
 
-.drop-zone__file-name {
-  font-size: 14px;
+.file-picker__name {
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
 }
 
-.drop-zone__file-size {
-  font-size: 12px;
+.file-picker__size {
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.file-picker__clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.file-picker__clear:hover {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+}
+
+.file-picker__hint {
+  font-size: 11px;
   color: var(--text-muted);
 }
 </style>

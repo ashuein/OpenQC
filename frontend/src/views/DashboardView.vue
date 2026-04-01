@@ -26,6 +26,15 @@ function handleSelectRun(runId) {
   store.loadRunDetail(runId)
 }
 
+async function handleDeleteRun(runId) {
+  try {
+    await store.removeRun(runId)
+    store.loadRuns()
+  } catch {
+    // silently fail on dashboard
+  }
+}
+
 onMounted(() => {
   store.loadRuns()
 })
@@ -71,7 +80,9 @@ onMounted(() => {
           <template v-else>
             <RunSummaryTable
               :runs="store.recentRuns"
+              max-height="300px"
               @select-run="handleSelectRun"
+              @delete-run="handleDeleteRun"
             />
           </template>
         </div>
