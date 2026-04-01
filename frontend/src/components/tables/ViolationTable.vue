@@ -12,6 +12,7 @@ defineProps({
 <template>
   <div class="violation-table">
     <template v-if="violations.length > 0">
+      <div class="vtable-scroll">
       <table class="vtable">
         <thead>
           <tr>
@@ -41,6 +42,7 @@ defineProps({
           </tr>
         </tbody>
       </table>
+      </div>
     </template>
 
     <div v-else class="violation-table__empty">
@@ -52,6 +54,11 @@ defineProps({
 <style scoped>
 .violation-table {
   width: 100%;
+}
+
+.vtable-scroll {
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .vtable {
@@ -68,6 +75,10 @@ defineProps({
   color: var(--text-muted);
   padding: 8px 12px;
   border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+  z-index: 1;
 }
 
 .vtable__row {

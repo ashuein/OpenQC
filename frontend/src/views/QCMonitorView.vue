@@ -98,13 +98,18 @@ const effectiveAssay = computed(() => {
   return selectedAssay.value || 'Unknown'
 })
 
-// Reset dependent fields when type changes
+// Reset dependent fields and clear results when type changes
 watch(selectedType, () => {
   selectedInstrument.value = ''
   customInstrument.value = ''
   selectedAssay.value = ''
   customAssay.value = ''
   channel.value = ''
+  selectedFile.value = null
+  uploadStatus.value = 'idle'
+  showColumnMapping.value = false
+  dismissError()
+  store.clearAnalysis()
 })
 
 function onFileSelected(file) {
@@ -308,17 +313,15 @@ onMounted(() => { loadRuns() })
             </div>
           </div>
 
-          <!-- Step 3: File + Upload button -->
+          <!-- Step 3: Upload button + File picker -->
           <div class="upload-row upload-row--file">
-            <div class="file-zone">
-              <FileDropZone @file-selected="onFileSelected" />
-            </div>
             <Button
               :disabled="!selectedFile || !selectedType || uploadStatus === 'uploading' || uploadStatus === 'parsing'"
               @click="handleUpload"
             >
               {{ uploadStatus === 'uploading' ? 'Uploading...' : uploadStatus === 'parsing' ? 'Analyzing...' : 'Upload and Analyze' }}
             </Button>
+            <FileDropZone @file-selected="onFileSelected" />
           </div>
         </div>
       </section>
@@ -440,13 +443,7 @@ onMounted(() => { loadRuns() })
 
 .upload-row--file {
   align-items: center;
-  gap: 16px;
-}
-
-.file-zone {
-  flex: 1;
-  min-width: 200px;
-  max-width: 400px;
+  gap: 12px;
 }
 
 /* Compact fields */
