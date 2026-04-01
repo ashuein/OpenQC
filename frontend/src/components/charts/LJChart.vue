@@ -56,7 +56,7 @@ const option = computed(() => {
 
   return {
     backgroundColor: '#FFFFFF',
-    grid: { left: 70, right: 30, top: 40, bottom: 50 },
+    grid: { left: 120, right: 40, top: 40, bottom: 50 },
     tooltip: {
       trigger: 'item',
       backgroundColor: '#fff',
@@ -172,13 +172,16 @@ const option = computed(() => {
 <style scoped>
 .lj-chart {
   width: 100%;
-  min-height: 480px;
+  display: flex;
+  justify-content: center;
   border-radius: 8px;
   overflow: hidden;
+  background: #FFFFFF;
 }
 
 .lj-chart__canvas {
   width: 100%;
-  height: 480px;
+  max-width: 900px;
+  height: 520px;
 }
 </style>
