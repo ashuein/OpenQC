@@ -110,14 +110,32 @@ def _build_analysis_points(run, db: Session) -> tuple[list[dict], dict]:
                 "_is_history": True,
             })
 
+    # Compute per-level mean/SD from the run's own data as a last-resort fallback.
+    # This handles files that don't include mean/SD columns (e.g., CFX, chemistry).
+    from backend.utils.stats import mean as calc_mean, sd as calc_sd
+
+    level_stats: dict[str, tuple[float, float]] = {}
+    for level in control_levels:
+        values = [dp.ct_value for dp in run.data_points if dp.control_level == level]
+        if len(values) >= 2:
+            level_stats[level] = (calc_mean(values), calc_sd(values))
+        elif len(values) == 1:
+            level_stats[level] = (values[0], 0.0)
+
     # Add current run points
     for dp in sorted(run.data_points, key=lambda d: d.sequence_index):
         mu, sigma = _resolve_mean_sd(dp, run, db)
+        # Fallback: use computed stats from this run's data for the same level
+        if mu is None or sigma is None:
+            computed = level_stats.get(dp.control_level)
+            if computed:
+                mu = mu if mu is not None else computed[0]
+                sigma = sigma if sigma is not None else computed[1]
         if mu is None or sigma is None:
             raise HTTPException(
                 status_code=400,
-                detail=f"Data point at index {dp.sequence_index} has no mean/SD. "
-                       "Upload a file with Ct Mean/SD columns or assign a control lot with mean/SD.",
+                detail=f"Data point at index {dp.sequence_index} has no mean/SD and "
+                       "insufficient data to calculate statistics automatically.",
             )
         all_points.append({
             "ct_value": dp.ct_value,
