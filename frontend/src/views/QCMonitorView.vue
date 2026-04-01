@@ -22,12 +22,20 @@ const channel = ref('')
 const reagentLotId = ref('')
 const controlLotId = ref('')
 
+const showColumnMapping = ref(false)
+const colValue = ref('')
+const colLevel = ref('')
+const colMean = ref('')
+const colSD = ref('')
+const colTarget = ref('')
+
 const runsLoading = ref(false)
 
 function onFileSelected(file) {
   selectedFile.value = file
   uploadStatus.value = 'idle'
   uploadMessage.value = ''
+  showColumnMapping.value = false
   store.clearAnalysis()
 }
 
@@ -49,6 +57,48 @@ async function handleUpload() {
     const run = await store.upload(selectedFile.value, metadata)
     uploadStatus.value = 'parsing'
     uploadMessage.value = 'File uploaded. Running analysis...'
+
+    await store.analyze(run.id)
+    uploadStatus.value = 'complete'
+    uploadMessage.value = 'Analysis complete.'
+    loadRuns()
+  } catch (e) {
+    uploadStatus.value = 'error'
+    const msg = e.message || 'Upload or analysis failed.'
+    uploadMessage.value = msg
+    if (msg.toLowerCase().includes('no data points could be parsed')) {
+      showColumnMapping.value = true
+    }
+  }
+}
+
+async function retryUploadWithMapping() {
+  if (!selectedFile.value) return
+
+  const mapping = {}
+  if (colValue.value) mapping.value = colValue.value
+  if (colLevel.value) mapping.level = colLevel.value
+  if (colMean.value) mapping.mean = colMean.value
+  if (colSD.value) mapping.sd = colSD.value
+  if (colTarget.value) mapping.target = colTarget.value
+
+  const metadata = {
+    instrument: instrument.value || 'Unknown',
+    assay: assay.value || 'Unknown',
+    column_mapping: JSON.stringify(mapping),
+  }
+  if (channel.value) metadata.channel = channel.value
+  if (reagentLotId.value) metadata.reagent_lot_id = reagentLotId.value
+  if (controlLotId.value) metadata.control_lot_id = controlLotId.value
+
+  uploadStatus.value = 'uploading'
+  uploadMessage.value = ''
+
+  try {
+    const run = await store.upload(selectedFile.value, metadata)
+    uploadStatus.value = 'parsing'
+    uploadMessage.value = 'File uploaded. Running analysis...'
+    showColumnMapping.value = false
 
     await store.analyze(run.id)
     uploadStatus.value = 'complete'
@@ -123,7 +173,7 @@ onMounted(() => {
                 v-model="instrument"
                 type="text"
                 class="form-field__input"
-                placeholder="e.g. Cobas 6000"
+                placeholder="e.g. Cobas 6000, Sysmex XN-1000, QuantStudio 5"
               />
             </div>
             <div class="form-field">
@@ -136,12 +186,12 @@ onMounted(() => {
               />
             </div>
             <div class="form-field">
-              <label class="form-field__label">Channel</label>
+              <label class="form-field__label">Channel / Fluor</label>
               <input
                 v-model="channel"
                 type="text"
                 class="form-field__input"
-                placeholder="e.g. FAM"
+                placeholder="e.g. FAM (molecular only)"
               />
             </div>
             <div class="form-field">
@@ -170,6 +220,65 @@ onMounted(() => {
             </Button>
           </div>
         </div>
+      </section>
+
+      <!-- Column Mapping Fallback -->
+      <section v-if="showColumnMapping" class="section column-mapping">
+        <h2 class="section__title">Column Mapping</h2>
+        <p class="mapping-hint">We couldn't auto-detect the columns. Please specify which columns contain your data:</p>
+        <div class="mapping-grid">
+          <div class="form-field">
+            <label class="form-field__label">Value Column</label>
+            <input
+              v-model="colValue"
+              type="text"
+              class="form-field__input"
+              placeholder="e.g. Cq, Value, Result"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-field__label">Level Column</label>
+            <input
+              v-model="colLevel"
+              type="text"
+              class="form-field__input"
+              placeholder="e.g. Level, Control, Sample"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-field__label">Mean Column (optional)</label>
+            <input
+              v-model="colMean"
+              type="text"
+              class="form-field__input"
+              placeholder="e.g. Mean, Assigned Mean"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-field__label">SD Column (optional)</label>
+            <input
+              v-model="colSD"
+              type="text"
+              class="form-field__input"
+              placeholder="e.g. SD, Std Dev"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-field__label">Analyte Column (optional)</label>
+            <input
+              v-model="colTarget"
+              type="text"
+              class="form-field__input"
+              placeholder="e.g. Analyte, Parameter, Target"
+            />
+          </div>
+        </div>
+        <Button
+          :disabled="!colValue"
+          @click="retryUploadWithMapping"
+        >
+          Retry Upload with Mapping
+        </Button>
       </section>
 
       <!-- Error Display -->
@@ -361,5 +470,32 @@ onMounted(() => {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+.column-mapping {
+  background-color: color-mix(in srgb, var(--color-warning, #f59e0b) 6%, var(--bg-surface));
+  border: 1px solid color-mix(in srgb, var(--color-warning, #f59e0b) 25%, transparent);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.mapping-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.mapping-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  .mapping-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

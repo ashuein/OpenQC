@@ -209,12 +209,24 @@ async def upload_qc_run(
     channel: str | None = Form(None),
     reagent_lot_id: str | None = Form(None),
     control_lot_id: str | None = Form(None),
+    column_mapping: str | None = Form(None),
     db: Session = Depends(get_db),
 ) -> QCRunResponse:
     """Upload a QC file, parse it, and store the run + data points."""
     file_bytes = await file.read()
     file_hash_val = hash_file(file_bytes)
     file_name = file.filename or "unknown"
+
+    # Parse optional column_mapping JSON
+    mapping_config: dict | None = None
+    if column_mapping:
+        try:
+            mapping_config = json.loads(column_mapping)
+        except (json.JSONDecodeError, TypeError):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid column_mapping JSON.",
+            )
 
     # Try parsers in priority order
     from backend.parsers.quantstudio_parser import QuantStudioParser
@@ -226,8 +238,11 @@ async def upload_qc_run(
     parsed: dict | None = None
     for parser in parsers:
         if parser.can_handle(metadata):
-            parsed = parser.parse(file_bytes)
-            break
+            parsed = parser.parse(file_bytes, mapping_config=mapping_config)
+            if parsed and parsed.get("rows"):
+                break
+            # If this parser returned nothing, try the next one
+            parsed = None
 
     if parsed is None or not parsed.get("rows"):
         raise HTTPException(status_code=400, detail="No data points could be parsed from the uploaded file.")
