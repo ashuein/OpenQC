@@ -56,7 +56,7 @@ const option = computed(() => {
 
   return {
     backgroundColor: '#FFFFFF',
-    grid: { left: 120, right: 40, top: 40, bottom: 50 },
+    grid: { left: 60, right: 120, top: 40, bottom: 50 },
     tooltip: {
       trigger: 'item',
       backgroundColor: '#fff',
@@ -86,22 +86,36 @@ const option = computed(() => {
       min: (value) => Math.max(0, value.min - 1),
       max: (value) => value.max + 1,
     },
-    yAxis: {
-      type: 'value',
-      name: 'QC Value',
-      nameTextStyle: { color: '#555', fontSize: 13, fontWeight: 'bold' },
-      axisLine: { lineStyle: { color: '#999' } },
-      axisTick: { lineStyle: { color: '#bbb' } },
-      axisLabel: {
-        color: '#444',
-        fontSize: 12,
-        fontWeight: 'bold',
-        formatter: (v) => fmt(v),
+    yAxis: [
+      {
+        type: 'value',
+        name: 'QC Value',
+        nameTextStyle: { color: '#555', fontSize: 13, fontWeight: 'bold' },
+        axisLine: { lineStyle: { color: '#999' } },
+        axisTick: { lineStyle: { color: '#bbb' } },
+        axisLabel: {
+          color: '#444',
+          fontSize: 12,
+          fontWeight: 'bold',
+          formatter: (v) => fmt(v),
+        },
+        splitLine: { lineStyle: { color: '#e0e0e0', type: 'dashed' } },
+        min: m - 4 * s,
+        max: m + 4 * s,
       },
-      splitLine: { lineStyle: { color: '#e0e0e0', type: 'dashed' } },
-      min: m - 4 * s,
-      max: m + 4 * s,
-    },
+      {
+        type: 'value',
+        position: 'right',
+        name: 'SD / Mean',
+        nameTextStyle: { color: '#777', fontSize: 11 },
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { show: false },
+        splitLine: { show: false },
+        min: m - 4 * s,
+        max: m + 4 * s,
+      },
+    ],
     series: [
       {
         name: 'Normal',
@@ -132,19 +146,20 @@ const option = computed(() => {
         name: 'Reference',
         type: 'line',
         data: [],
+        yAxisIndex: 0,
         markLine: {
           silent: true,
           symbol: 'none',
           lineStyle: { type: 'solid', width: 1.5 },
-          label: { position: 'start', fontSize: 12, fontWeight: 'bold' },
+          label: { position: 'end', fontSize: 12, fontWeight: 'bold' },
           data: [
-            { yAxis: m, label: { formatter: `Mean (${fmt(m)})`, color: '#2E7D32' }, lineStyle: { color: '#43A047', width: 2 } },
-            { yAxis: m + s, label: { formatter: `+1SD (${fmt(m+s)})`, color: '#888' }, lineStyle: { color: '#bbb', type: 'dotted' } },
-            { yAxis: m - s, label: { formatter: `-1SD (${fmt(m-s)})`, color: '#888' }, lineStyle: { color: '#bbb', type: 'dotted' } },
-            { yAxis: m + 2*s, label: { formatter: `+2SD (${fmt(m+2*s)})`, color: '#E65100' }, lineStyle: { color: '#F9A825', width: 1.5, type: 'dashed' } },
-            { yAxis: m - 2*s, label: { formatter: `-2SD (${fmt(m-2*s)})`, color: '#E65100' }, lineStyle: { color: '#F9A825', width: 1.5, type: 'dashed' } },
-            { yAxis: m + 3*s, label: { formatter: `+3SD (${fmt(m+3*s)})`, color: '#C62828' }, lineStyle: { color: '#E53935', width: 1.5, type: 'dashed' } },
-            { yAxis: m - 3*s, label: { formatter: `-3SD (${fmt(m-3*s)})`, color: '#C62828' }, lineStyle: { color: '#E53935', width: 1.5, type: 'dashed' } },
+            { yAxis: m, label: { formatter: `Mean ${fmt(m)}`, color: '#2E7D32' }, lineStyle: { color: '#43A047', width: 2 } },
+            { yAxis: m + s, label: { formatter: `+1SD ${fmt(m+s)}`, color: '#888' }, lineStyle: { color: '#bbb', type: 'dotted' } },
+            { yAxis: m - s, label: { formatter: `-1SD ${fmt(m-s)}`, color: '#888' }, lineStyle: { color: '#bbb', type: 'dotted' } },
+            { yAxis: m + 2*s, label: { formatter: `+2SD ${fmt(m+2*s)}`, color: '#E65100' }, lineStyle: { color: '#F9A825', width: 1.5, type: 'dashed' } },
+            { yAxis: m - 2*s, label: { formatter: `-2SD ${fmt(m-2*s)}`, color: '#E65100' }, lineStyle: { color: '#F9A825', width: 1.5, type: 'dashed' } },
+            { yAxis: m + 3*s, label: { formatter: `+3SD ${fmt(m+3*s)}`, color: '#C62828' }, lineStyle: { color: '#E53935', width: 1.5, type: 'dashed' } },
+            { yAxis: m - 3*s, label: { formatter: `-3SD ${fmt(m-3*s)}`, color: '#C62828' }, lineStyle: { color: '#E53935', width: 1.5, type: 'dashed' } },
           ],
         },
         markArea: {
@@ -181,7 +196,7 @@ const option = computed(() => {
 
 .lj-chart__canvas {
   width: 100%;
-  max-width: 900px;
+  max-width: 1080px;
   height: 520px;
 }
 </style>
