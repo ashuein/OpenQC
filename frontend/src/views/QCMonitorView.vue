@@ -9,6 +9,7 @@ import ViolationTable from '@/components/tables/ViolationTable.vue'
 import RunSummaryTable from '@/components/tables/RunSummaryTable.vue'
 import { Button } from '@/components/ui/button'
 import { useQcStore } from '@/stores/qcStore'
+import { printReport } from '@/utils/printReport'
 
 const store = useQcStore()
 
@@ -229,6 +230,13 @@ async function handleDeleteRun(runId) {
   }
 }
 
+function handleExport() {
+  printReport({
+    title: 'QC Monitor Report',
+    subtitle: `Assay: ${effectiveAssay.value} | Instrument: ${effectiveInstrument.value}`,
+  })
+}
+
 onMounted(() => { loadRuns() })
 </script>
 
@@ -236,7 +244,7 @@ onMounted(() => { loadRuns() })
   <div class="view">
     <PageHeader title="QC Monitor" subtitle="Westgard rule evaluation and Levey-Jennings charts">
       <template #actions>
-        <ExportButton @export="() => {}" />
+        <ExportButton @export="handleExport" />
       </template>
     </PageHeader>
 

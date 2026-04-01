@@ -4,6 +4,7 @@ import PageHeader from '@/components/shared/PageHeader.vue'
 import ExportButton from '@/components/shared/ExportButton.vue'
 import SigmaInputForm from '@/components/forms/SigmaInputForm.vue'
 import { useSigmaStore } from '@/stores/sigmaStore'
+import { printReport } from '@/utils/printReport'
 
 const NMEDxChart = defineAsyncComponent(() =>
   import('@/components/charts/NMEDxChart.vue')
@@ -39,6 +40,13 @@ function formatSigma(value) {
   return typeof value === 'number' ? value.toFixed(2) : '-'
 }
 
+function handleExport() {
+  printReport({
+    title: 'Sigma Analysis Report',
+    subtitle: `${sigma.results.length} assays analyzed`,
+  })
+}
+
 async function handleCalculate(inputs) {
   try {
     await sigma.calculate(inputs)
@@ -52,7 +60,7 @@ async function handleCalculate(inputs) {
   <div class="view">
     <PageHeader title="Sigma Analysis" subtitle="Six Sigma metrics and QC design optimization">
       <template #actions>
-        <ExportButton v-if="hasResults" @export="() => {}" />
+        <ExportButton v-if="hasResults" @export="handleExport" />
       </template>
     </PageHeader>
 

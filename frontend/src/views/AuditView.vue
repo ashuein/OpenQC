@@ -7,6 +7,7 @@ import ExportButton from '@/components/shared/ExportButton.vue'
 import AuditTable from '@/components/tables/AuditTable.vue'
 import { Button } from '@/components/ui/button'
 import { ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { printReport } from '@/utils/printReport'
 
 const store = useAuditStore()
 
@@ -47,17 +48,17 @@ async function handleVerifyChain() {
 }
 
 async function handleExport(format) {
+  if (format === 'pdf') {
+    printReport({
+      title: 'Audit Trail Report',
+      subtitle: `${store.entries.length} entries`,
+    })
+    return
+  }
   exporting.value = true
   try {
     const data = await store.exportLog(format)
-    if (format === 'pdf' && data instanceof Blob) {
-      const url = URL.createObjectURL(data)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'audit-log.pdf'
-      a.click()
-      URL.revokeObjectURL(url)
-    } else if (format === 'json') {
+    if (format === 'json') {
       const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: 'application/json',
       })
