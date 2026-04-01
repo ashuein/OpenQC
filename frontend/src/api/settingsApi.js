@@ -1,8 +1,10 @@
+import { throwIfError } from './helpers'
+
 const BASE_URL = 'http://localhost:8000'
 
 export async function getApiKeyStatus() {
   const res = await fetch(`${BASE_URL}/settings/api-key/status`)
-  if (!res.ok) throw new Error(`Failed to check API key status: ${res.status}`)
+  await throwIfError(res, 'Failed to check API key status')
   return res.json()
 }
 
@@ -12,12 +14,12 @@ export async function setApiKey(apiKey) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ api_key: apiKey }),
   })
-  if (!res.ok) throw new Error(`Failed to save API key: ${res.status}`)
+  await throwIfError(res, 'Failed to save API key')
   return res.json()
 }
 
 export async function removeApiKey() {
   const res = await fetch(`${BASE_URL}/settings/api-key`, { method: 'DELETE' })
-  if (!res.ok) throw new Error(`Failed to remove API key: ${res.status}`)
+  await throwIfError(res, 'Failed to remove API key')
   return res.json()
 }

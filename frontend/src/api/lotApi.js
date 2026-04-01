@@ -1,8 +1,10 @@
+import { throwIfError } from './helpers'
+
 const BASE_URL = 'http://localhost:8000'
 
 export async function fetchReagentLots() {
   const res = await fetch(`${BASE_URL}/lots/reagents`)
-  if (!res.ok) throw new Error(`Fetch reagent lots failed: ${res.status}`)
+  await throwIfError(res, 'Fetch reagent lots failed')
   return res.json()
 }
 
@@ -12,13 +14,13 @@ export async function createReagentLot(lotData) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(lotData),
   })
-  if (!res.ok) throw new Error(`Create reagent lot failed: ${res.status}`)
+  await throwIfError(res, 'Create reagent lot failed')
   return res.json()
 }
 
 export async function fetchControlLots() {
   const res = await fetch(`${BASE_URL}/lots/controls`)
-  if (!res.ok) throw new Error(`Fetch control lots failed: ${res.status}`)
+  await throwIfError(res, 'Fetch control lots failed')
   return res.json()
 }
 
@@ -28,6 +30,6 @@ export async function createControlLot(lotData) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(lotData),
   })
-  if (!res.ok) throw new Error(`Create control lot failed: ${res.status}`)
+  await throwIfError(res, 'Create control lot failed')
   return res.json()
 }

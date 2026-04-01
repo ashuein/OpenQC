@@ -1,3 +1,5 @@
+import { throwIfError } from './helpers'
+
 const BASE_URL = 'http://localhost:8000'
 
 export async function uploadValidationFile(file, validationType) {
@@ -5,7 +7,7 @@ export async function uploadValidationFile(file, validationType) {
   formData.append('file', file)
   formData.append('validation_type', validationType)
   const res = await fetch(`${BASE_URL}/validation/upload`, { method: 'POST', body: formData })
-  if (!res.ok) throw new Error(`Upload failed: ${res.status}`)
+  await throwIfError(res, 'Upload failed')
   return res.json()
 }
 
@@ -15,12 +17,12 @@ export async function runValidation(datasetId, acceptanceCriteria) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ dataset_id: datasetId, acceptance_criteria: acceptanceCriteria }),
   })
-  if (!res.ok) throw new Error(`Validation failed: ${res.status}`)
+  await throwIfError(res, 'Validation failed')
   return res.json()
 }
 
 export async function fetchValidationReport(validationId) {
   const res = await fetch(`${BASE_URL}/validation/report/${validationId}`)
-  if (!res.ok) throw new Error(`Fetch report failed: ${res.status}`)
+  await throwIfError(res, 'Fetch report failed')
   return res.json()
 }
